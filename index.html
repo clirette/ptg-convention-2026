@@ -112,7 +112,7 @@
     }
     .class-card .class-title { font-weight: 600; font-size: 1rem; }
     .class-card .class-actions { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; }
-    .class-card .class-presenter { font-size: 0.9rem; color: var(--muted); }
+    .class-card .class-presenter { font-size: 0.9rem; color: var(--muted); font-weight: 400; }
     .class-card .class-meta {
       text-align: right;
       font-size: 0.85rem;
@@ -880,9 +880,8 @@ function renderMySchedule() {
         const descId = 'msdesc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title}</div>
+            <div class="class-title">${c.title} <span class="class-presenter">${c.presenter}</span></div>
             <div class="class-actions">${levelBadgeHTML(level)}<button class="bookmark-btn saved" title="Remove from My Schedule">Remove</button></div>
-            <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
           </div>
           <div class="class-meta">
@@ -984,9 +983,8 @@ function renderAll() {
         const descId = 'desc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title}</div>
+            <div class="class-title">${c.title} <span class="class-presenter">${c.presenter}</span></div>
             <div class="class-actions">${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule"></button></div>
-            <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
           </div>
