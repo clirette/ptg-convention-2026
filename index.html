@@ -237,6 +237,46 @@
     }
     footer a { color: var(--accent); }
 
+    /* Bookmark / My Schedule */
+    .bookmark-btn {
+      background: none; border: none; cursor: pointer; font-size: 1.1rem;
+      padding: 0; margin-left: 0.35rem; opacity: 0.35; transition: opacity 0.15s, transform 0.15s;
+      vertical-align: middle; line-height: 1;
+    }
+    .bookmark-btn:hover { opacity: 0.7; transform: scale(1.2); }
+    .bookmark-btn.saved { opacity: 1; }
+    .class-card.selected { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+    .my-schedule-tab {
+      padding: 0.6rem 1.5rem; border: 2px solid #b45309; border-radius: 6px;
+      background: transparent; color: #b45309; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .my-schedule-tab:hover { background: #fef3c7; }
+    .my-schedule-tab.active { background: #b45309; color: white; }
+    .my-sched-badge {
+      display: inline-block; background: #b45309; color: white; font-size: 0.7rem;
+      border-radius: 10px; padding: 0.05rem 0.45rem; margin-left: 0.4rem; font-weight: 700;
+      vertical-align: middle;
+    }
+    .my-schedule-tab.active .my-sched-badge { background: white; color: #b45309; }
+    .my-schedule-section { display: none; }
+    .my-schedule-section.active { display: block; }
+    .my-sched-actions {
+      display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;
+    }
+    .my-sched-actions button {
+      padding: 0.4rem 1rem; border-radius: 4px; border: 1px solid var(--border);
+      font-size: 0.85rem; cursor: pointer; font-weight: 500; background: var(--card);
+    }
+    .my-sched-actions .export-btn { color: var(--accent); border-color: var(--accent); }
+    .my-sched-actions .export-btn:hover { background: var(--accent-light); }
+    .my-sched-actions .clear-btn { color: #dc2626; border-color: #dc2626; }
+    .my-sched-actions .clear-btn:hover { background: #fef2f2; }
+    .my-sched-empty {
+      text-align: center; padding: 3rem 1rem; color: var(--muted);
+    }
+    .my-sched-empty p { margin-bottom: 0.5rem; }
+
     /* Responsive */
     @media (max-width: 640px) {
       header h1 { font-size: 1.4rem; }
@@ -245,6 +285,7 @@
       }
       .class-card .class-meta { text-align: left; margin-top: 0.25rem; }
       .day-tab { padding: 0.5rem 1rem; font-size: 0.85rem; }
+      .my-schedule-tab { padding: 0.5rem 1rem; font-size: 0.85rem; }
     }
   </style>
 </head>
@@ -302,6 +343,7 @@
   <div class="day-tabs" id="day-tabs"></div>
   <div class="class-count" id="class-count"></div>
   <div id="day-sections"></div>
+  <div class="my-schedule-section" id="my-schedule-section"></div>
 
 </div>
 
@@ -682,6 +724,38 @@ const days = [...new Set(schedule.map(s => s.day))];
 const categories = [...new Set(schedule.map(s => s.category))].sort();
 
 // Populate category filter
+// ─── My Schedule (localStorage) ───
+const STORAGE_KEY = 'ptg2026_my_schedule';
+function getSelections() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { return []; }
+}
+function saveSelections(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+function classKey(c) { return c.day + '|' + c.time + '|' + c.title; }
+function timeSlotKey(c) { return c.day + '|' + c.time; }
+function isSelected(c) { return getSelections().includes(classKey(c)); }
+function getSelectedSlots() {
+  const sel = getSelections();
+  const slots = {};
+  sel.forEach(key => { const parts = key.split('|'); slots[parts[0] + '|' + parts[1]] = key; });
+  return slots;
+}
+function toggleSelection(c) {
+  const key = classKey(c);
+  let sel = getSelections();
+  if (sel.includes(key)) {
+    sel = sel.filter(k => k !== key);
+  } else {
+    // Remove any existing selection in the same time slot
+    const slot = timeSlotKey(c);
+    sel = sel.filter(k => { const p = k.split('|'); return (p[0] + '|' + p[1]) !== slot; });
+    sel.push(key);
+  }
+  saveSelections(sel);
+  updateBadge();
+  renderAll();
+  if (mySchedActive) renderMySchedule();
+}
+
 const catFilter = document.getElementById('cat-filter');
 categories.forEach(c => {
   const opt = document.createElement('option');
@@ -693,7 +767,6 @@ const tabsEl = document.getElementById('day-tabs');
 const sectionsEl = document.getElementById('day-sections');
 
 days.forEach((day, i) => {
-  // Tab
   const btn = document.createElement('button');
   btn.className = 'day-tab' + (i === 0 ? ' active' : '');
   btn.textContent = day === 'Special' ? '⭐ Special' : day.split(',')[0];
@@ -701,7 +774,6 @@ days.forEach((day, i) => {
   btn.addEventListener('click', () => switchDay(day));
   tabsEl.appendChild(btn);
 
-  // Section
   const sec = document.createElement('div');
   sec.className = 'day-section' + (i === 0 ? ' active' : '');
   sec.id = 'day-' + i;
@@ -709,10 +781,155 @@ days.forEach((day, i) => {
   sectionsEl.appendChild(sec);
 });
 
+// My Schedule tab
+const mySchedBtn = document.createElement('button');
+mySchedBtn.className = 'my-schedule-tab';
+mySchedBtn.innerHTML = '📋 My Schedule <span class="my-sched-badge" id="my-sched-badge">0</span>';
+mySchedBtn.addEventListener('click', () => switchToMySchedule());
+tabsEl.appendChild(mySchedBtn);
+
+let mySchedActive = false;
+function updateBadge() {
+  const count = getSelections().length;
+  document.getElementById('my-sched-badge').textContent = count;
+}
+updateBadge();
+
 function switchDay(day) {
+  mySchedActive = false;
+  mySchedBtn.classList.remove('active');
+  document.getElementById('my-schedule-section').classList.remove('active');
   document.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.day === day));
   document.querySelectorAll('.day-section').forEach(s => s.classList.toggle('active', s.dataset.day === day));
+  document.getElementById('class-count').style.display = '';
   renderAll();
+}
+
+function switchToMySchedule() {
+  mySchedActive = true;
+  mySchedBtn.classList.add('active');
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('class-count').style.display = 'none';
+  document.getElementById('my-schedule-section').classList.add('active');
+  renderMySchedule();
+}
+
+function renderMySchedule() {
+  const container = document.getElementById('my-schedule-section');
+  const sel = getSelections();
+  container.innerHTML = '';
+
+  if (sel.length === 0) {
+    container.innerHTML = `<div class="my-sched-empty">
+      <p style="font-size:1.5rem;">📋</p>
+      <p><strong>No classes selected yet</strong></p>
+      <p>Click the ⭐ star on any class to add it to your personal schedule.</p>
+    </div>`;
+    return;
+  }
+
+  // Action bar
+  const actions = document.createElement('div');
+  actions.className = 'my-sched-actions';
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'export-btn';
+  exportBtn.textContent = '📄 Export as Text';
+  exportBtn.addEventListener('click', exportSchedule);
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'clear-btn';
+  clearBtn.textContent = '🗑️ Clear All';
+  clearBtn.addEventListener('click', () => { if (confirm('Remove all selected classes?')) { saveSelections([]); updateBadge(); renderMySchedule(); renderAll(); } });
+  actions.appendChild(exportBtn);
+  actions.appendChild(clearBtn);
+  actions.appendChild(Object.assign(document.createElement('span'), { style: 'color:var(--muted);font-size:0.85rem;', textContent: sel.length + ' class' + (sel.length !== 1 ? 'es' : '') + ' selected' }));
+  container.appendChild(actions);
+
+  // Get selected classes, grouped by day then time
+  const selected = schedule.filter(c => sel.includes(classKey(c)));
+  const dayOrder = [...new Set(selected.map(c => c.day))];
+  // Sort days in original order
+  dayOrder.sort((a, b) => days.indexOf(a) - days.indexOf(b));
+
+  dayOrder.forEach(day => {
+    const dayLabel = document.createElement('h2');
+    dayLabel.textContent = day;
+    dayLabel.style.cssText = 'font-size:1.3rem; color:var(--accent); margin:1rem 0 0.5rem; padding-bottom:0.4rem; border-bottom:2px solid var(--accent);';
+    container.appendChild(dayLabel);
+
+    const dayClasses = selected.filter(c => c.day === day);
+    const timeOrder = [];
+    const timeMap = {};
+    dayClasses.forEach(c => {
+      if (!timeMap[c.time]) { timeOrder.push(c.time); timeMap[c.time] = []; }
+      timeMap[c.time].push(c);
+    });
+
+    timeOrder.forEach(time => {
+      const group = document.createElement('div');
+      group.className = 'time-group';
+      const h = document.createElement('h3');
+      h.textContent = time.includes('to') ? '🕐 ' + time + ' (multi-period)' : '🕐 ' + time;
+      group.appendChild(h);
+
+      timeMap[time].forEach(c => {
+        const level = getLevel(c);
+        const desc = getDesc(c);
+        const card = document.createElement('div');
+        card.className = 'class-card selected ' + catClass(c.category);
+        const descId = 'msdesc-' + Math.random().toString(36).substr(2, 9);
+        card.innerHTML = `
+          <div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn saved" onclick="toggleSelectionByKey('${classKey(c).replace(/'/g, "\\'")}')" title="Remove from My Schedule">⭐</button>${desc ? `<span class="class-desc-toggle" onclick="document.getElementById('${descId}').classList.toggle('open')" title="Show description">ℹ️</span>` : ''}</div>
+            <div class="class-presenter">${c.presenter}</div>
+            ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
+          </div>
+          <div class="class-meta">
+            <div class="class-room">📍 ${c.room}</div>
+            <span class="class-category">${c.category}</span>
+            ${c.multi ? '<div class="multi-period">⏱ Multi-period</div>' : ''}
+          </div>
+        `;
+        group.appendChild(card);
+      });
+      container.appendChild(group);
+    });
+  });
+}
+
+// Helper for My Schedule remove buttons
+function toggleSelectionByKey(key) {
+  let sel = getSelections();
+  sel = sel.filter(k => k !== key);
+  saveSelections(sel);
+  updateBadge();
+  renderMySchedule();
+  renderAll();
+}
+
+function exportSchedule() {
+  const sel = getSelections();
+  const selected = schedule.filter(c => sel.includes(classKey(c)));
+  const dayOrder = [...new Set(selected.map(c => c.day))].sort((a, b) => days.indexOf(a) - days.indexOf(b));
+  let text = 'PTG 2026 Convention — My Schedule\n' + '='.repeat(40) + '\n\n';
+  dayOrder.forEach(day => {
+    text += day + '\n' + '-'.repeat(day.length) + '\n';
+    const dayClasses = selected.filter(c => c.day === day);
+    const timeOrder = []; const timeMap = {};
+    dayClasses.forEach(c => { if (!timeMap[c.time]) { timeOrder.push(c.time); timeMap[c.time] = []; } timeMap[c.time].push(c); });
+    timeOrder.forEach(time => {
+      timeMap[time].forEach(c => {
+        text += `  ${time}  ${c.title} — ${c.presenter} (${c.room})\n`;
+      });
+    });
+    text += '\n';
+  });
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ptg2026_my_schedule.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 function renderAll() {
@@ -736,7 +953,6 @@ function renderAll() {
       return true;
     });
 
-    // Group by time
     const timeOrder = [];
     const timeMap = {};
     dayClasses.forEach(c => {
@@ -758,12 +974,13 @@ function renderAll() {
       timeMap[time].forEach(c => {
         const level = getLevel(c);
         const desc = getDesc(c);
+        const sel = isSelected(c);
         const card = document.createElement('div');
-        card.className = 'class-card ' + catClass(c.category);
+        card.className = 'class-card ' + catClass(c.category) + (sel ? ' selected' : '');
         const descId = 'desc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}${desc ? `<span class="class-desc-toggle" onclick="document.getElementById('${descId}').classList.toggle('open')" title="Show description">ℹ️</span>` : ''}</div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule">☆</button>${desc ? `<span class="class-desc-toggle" onclick="event.stopPropagation(); document.getElementById('${descId}').classList.toggle('open')" title="Show description">ℹ️</span>` : ''}</div>
             <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
@@ -774,6 +991,10 @@ function renderAll() {
             ${c.multi ? '<div class="multi-period">⏱ Multi-period</div>' : ''}
           </div>
         `;
+        // Attach bookmark click
+        const bmBtn = card.querySelector('.bookmark-btn');
+        bmBtn.textContent = sel ? '⭐' : '☆';
+        bmBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSelection(c); });
         group.appendChild(card);
       });
 
