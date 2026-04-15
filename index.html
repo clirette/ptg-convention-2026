@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTG 2026 Convention Classes</title>
+  <style>
+    :root {
+      --bg: #f5f5f0;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #666;
+      --border: #ddd;
+      --accent: #1a3a5c;
+      --accent-light: #e8eef4;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--accent);
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+    header p { opacity: 0.85; font-size: 1rem; }
+    header .subtitle { font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+
+    /* Period reference */
+    .period-ref {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin: 1rem 0;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 2rem;
+      align-items: center;
+    }
+    .period-ref .label { font-weight: 600; color: var(--accent); }
+    .period-ref span { font-size: 0.9rem; white-space: nowrap; }
+
+    /* Day tabs */
+    .day-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin: 1.5rem 0 1rem;
+      flex-wrap: wrap;
+    }
+    .day-tab {
+      padding: 0.6rem 1.5rem;
+      border: 2px solid var(--accent);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--accent);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .day-tab:hover { background: var(--accent-light); }
+    .day-tab.active { background: var(--accent); color: white; }
+
+    /* Day section */
+    .day-section { display: none; }
+    .day-section.active { display: block; }
+
+    .day-section h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin: 1rem 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    /* Time group */
+    .time-group { margin-bottom: 1.5rem; }
+    .time-group h3 {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      background: var(--accent-light);
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    /* Class cards */
+    .class-card {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.5rem;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.25rem 1rem;
+      align-items: start;
+    }
+    .class-card .class-title { font-weight: 600; font-size: 1rem; }
+    .class-card .class-presenter { font-size: 0.9rem; color: var(--muted); }
+    .class-card .class-meta {
+      text-align: right;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .class-card .class-room { font-weight: 500; }
+    .class-card .class-category {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-top: 0.25rem;
+    }
+    .class-card .multi-period {
+      font-size: 0.75rem;
+      color: #b45309;
+      font-weight: 600;
+    }
+
+    /* Category colors */
+    .cat-action       { border-left-color: #dc2626; }
+    .cat-action .class-category { background: #fef2f2; color: #dc2626; }
+    .cat-business     { border-left-color: #2563eb; }
+    .cat-business .class-category { background: #eff6ff; color: #2563eb; }
+    .cat-caut         { border-left-color: #7c3aed; }
+    .cat-caut .class-category { background: #f5f3ff; color: #7c3aed; }
+    .cat-design       { border-left-color: #0891b2; }
+    .cat-design .class-category { background: #ecfeff; color: #0891b2; }
+    .cat-etd          { border-left-color: #4f46e5; }
+    .cat-etd .class-category { background: #eef2ff; color: #4f46e5; }
+    .cat-forums       { border-left-color: #db2777; }
+    .cat-forums .class-category { background: #fdf2f8; color: #db2777; }
+    .cat-health       { border-left-color: #16a34a; }
+    .cat-health .class-category { background: #f0fdf4; color: #16a34a; }
+    .cat-players      { border-left-color: #ea580c; }
+    .cat-players .class-category { background: #fff7ed; color: #ea580c; }
+    .cat-rebuilding   { border-left-color: #ca8a04; }
+    .cat-rebuilding .class-category { background: #fefce8; color: #ca8a04; }
+    .cat-rpt          { border-left-color: #059669; }
+    .cat-rpt .class-category { background: #ecfdf5; color: #059669; }
+    .cat-service      { border-left-color: #9333ea; }
+    .cat-service .class-category { background: #faf5ff; color: #9333ea; }
+    .cat-tuning       { border-left-color: #0284c7; }
+    .cat-tuning .class-category { background: #f0f9ff; color: #0284c7; }
+    .cat-voicing      { border-left-color: #e11d48; }
+    .cat-voicing .class-category { background: #fff1f2; color: #e11d48; }
+
+    /* Filter bar */
+    .filter-bar {
+      margin: 1rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .filter-bar label { font-weight: 600; color: var(--accent); margin-right: 0.25rem; }
+    .filter-bar select, .filter-bar input {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      background: var(--card);
+    }
+    .filter-bar input { flex: 1; min-width: 200px; }
+    .filter-bar .reset-btn {
+      padding: 0.4rem 1rem;
+      background: var(--accent-light);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      color: var(--accent);
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .class-count { font-size: 0.85rem; color: var(--muted); margin: 0.5rem 0; }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      header h1 { font-size: 1.4rem; }
+      .class-card {
+        grid-template-columns: 1fr;
+      }
+      .class-card .class-meta { text-align: left; margin-top: 0.25rem; }
+      .day-tab { padding: 0.5rem 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎹 PTG 2026 Convention Classes</h1>
+  <p>Piano Technicians Guild National Convention</p>
+  <div class="subtitle">July 22–25, 2026 &bull; Washington, D.C. area</div>
+</header>
+
+<div class="container">
+
+  <div class="period-ref">
+    <span class="label">Class Periods:</span>
+    <span><strong>P1</strong> 8:00–9:30</span>
+    <span><strong>P2</strong> 10:30–12:00</span>
+    <span><strong>P3</strong> 1:30–3:00</span>
+    <span><strong>P4</strong> 3:45–5:15</span>
+    <span><strong>P5</strong> 5:30–7:00 <em>(Wed–Fri)</em></span>
+  </div>
+  <div style="font-size:0.9rem; color:var(--muted); margin-bottom:0.5rem;">
+    Regional meetings: <strong>Thursday, 6:45–7:45 a.m.</strong> (listed separately)
+  </div>
+
+  <div class="filter-bar">
+    <label for="cat-filter">Category:</label>
+    <select id="cat-filter"><option value="">All Categories</option></select>
+    <label for="search-input">Search:</label>
+    <input type="text" id="search-input" placeholder="Class name, presenter, room…">
+    <button class="reset-btn" id="reset-btn">Reset</button>
+  </div>
+
+  <div class="day-tabs" id="day-tabs"></div>
+  <div class="class-count" id="class-count"></div>
+  <div id="day-sections"></div>
+
+</div>
+
+<footer>
+  Generated from the official <a href="https://static1.squarespace.com/static/6348631404ab2405a943a57b/t/69bec1a416dc4c169fd0d026/1774109092409/PTGCon26+Bubble+16Mar2026.pdf" target="_blank">PTG Convention 2026 PDF</a>
+</footer>
+
+<script>
+// ─── Schedule Data ───
+const schedule = [
+  // ── Wednesday, July 22 ──
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "Three Regulations", presenter: "Ed Foote", room: "Potomac VI", category: "Action Regulation" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "The Class on Teaching the Class", presenter: "Emily Townsend", room: "Potomac V", category: "Business & Networking" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "Lifting Stuff", presenter: "Kathy Smith", room: "Jefferson", category: "Health" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "Action Geometry Demystified", presenter: "Jason Cassel", room: "Washington B", category: "Rebuilding & Shop" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "If I Had a Hammer", presenter: "David Love", room: "Fairfax", category: "Rebuilding & Shop" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "Recap the Vertical Bass Bridge without Removing the Plate", presenter: "C. Bolduc", room: "Roosevelt", category: "Rebuilding & Shop" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "1/2 Day Grand Piano Service", presenter: "Starr Taylor", room: "Potomac III", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "Introduction to the Piano Life Saver System", presenter: "Kenny Brown, Dampp-Chaser", room: "Kennedy", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "Piano Stability: Will It Hold?", presenter: "Barbara Campbell", room: "Washington A", category: "Tuning" },
+  { day: "Wednesday, July 22", time: "8:00–9:30", title: "Professional Pin Setting", presenter: "Dan Levitan", room: "Lincoln", category: "Tuning" },
+  { day: "Wednesday, July 22", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "Take the RPT Written Exam", presenter: "Greg Cheng", room: "Arlington", category: "RPT Exam Classes" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "Bending Grand Damper Wires (BYOT)", presenter: "Rick & John Butler", room: "Tidewater II", category: "Action Regulation" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "Business is GRAND", presenter: "John Gallen", room: "Potomac V", category: "Business & Networking" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "Grand by Hand: Tech's Tour of NY Steinway Factory", presenter: "B. Gac, Steinway", room: "Washington A", category: "Design & History" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "Tuning in to Trouble", presenter: "Eva Jeffers", room: "Conference Th.", category: "Health" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "The Jansen Artist Bench: Anatomy, Service & Repair", presenter: "Bruce Stevens", room: "Kennedy", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "Lacquer Finish Touch Up", presenter: "Mike Ello", room: "Roosevelt", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "The Ultimate Puzzle: The Aural Temperament", presenter: "Lucy Urlacher", room: "Lincoln", category: "Tuning" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "Fazioli Voicing: Factory to Concert Stage", presenter: "Baldassin & Dubay, Fazioli", room: "Potomac VI", category: "Voicing & Concert" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "If It's Broken, Fix It!", presenter: "Norman Vesprini", room: "Jefferson", category: "Voicing & Concert" },
+  { day: "Wednesday, July 22", time: "10:30–12:00", title: "Voicing Fundamentals", presenter: "David Love", room: "Fairfax", category: "Voicing & Concert" },
+  { day: "Wednesday, July 22", time: "10:30–12:00 to 1:30–3:00", multi: true, title: "Bearing vs Crown", presenter: "Kirk Burgett & Zach Hardy, WNG", room: "Potomac IV", category: "Rebuilding & Shop" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Travelling and Burning: Foundations of Alignment", presenter: "Emily Townsend", room: "Fairfax", category: "Action Regulation" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Voicing Your Business", presenter: "George Buss", room: "Conference Th.", category: "Business & Networking" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Hearing Aids, Stigmas, and Solutions", presenter: "Erik Martin", room: "Potomac VI", category: "Health" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Beyond the Coffee Table: Charting Your Workshop", presenter: "Holly Grodsky", room: "Potomac V", category: "Rebuilding & Shop" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Grand Hammer Replacement", presenter: "Josi Davis", room: "Kennedy", category: "Rebuilding & Shop" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "What is a Piano Key?", presenter: "Nathan Rau", room: "Arlington", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Efficient and Effective Tone Regulation", presenter: "Dennis Johnson", room: "Potomac III", category: "Voicing & Concert" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Foundations of Tone in the NY Steinway", presenter: "Daniel DeBiasio, Steinway", room: "Washington A", category: "Voicing & Concert" },
+  { day: "Wednesday, July 22", time: "1:30–3:00", title: "Optimizing Piano Tone", presenter: "Ben Rocke", room: "Jefferson", category: "Voicing & Concert" },
+  { day: "Wednesday, July 22", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "How to Design a Piano", presenter: "Delwin D. Fandrich", room: "Lincoln", category: "Design & History" },
+  { day: "Wednesday, July 22", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "The Sound of Your Tuning", presenter: "Don Mannino", room: "Washington B", category: "Tuning" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "The Aftertouch Ballgame", presenter: "Jason Cassel", room: "Potomac VI", category: "Action Regulation" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "Gut Taxes?", presenter: "John Gallen", room: "Conference Th.", category: "Business & Networking" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "Acoustics Playground", presenter: "Christopher Storch", room: "Arlington", category: "Design & History" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "AI and the Future of Instrument Entertainment", presenter: "Lori Clutter Harvey, QRS", room: "Kennedy", category: "Players" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "Blend Tradition w/Tech: CNC/3D Printing Piano Restoration", presenter: "B. Larson", room: "Fairfax", category: "Rebuilding & Shop" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "Bösendorfer Technical Presentation", presenter: "Bösendorfer Team", room: "Potomac IV", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "From Sheep to Hammer", presenter: "Alexander & Norbert Abel, Abel", room: "Potomac III", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "Rebuilding the Steinway Pedal Lyre", presenter: "James Carney", room: "Potomac V", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "Bulletproof Tuning", presenter: "Steve Brady", room: "Washington A", category: "Tuning" },
+  { day: "Wednesday, July 22", time: "3:45–5:15", title: "Angel Shot Voicing", presenter: "Zhiwei Huang", room: "Jefferson", category: "Voicing & Concert" },
+  { day: "Wednesday, July 22", time: "5:30–7:00", title: "How to Be an Effective Playground Facilitator", presenter: "John Parham & Bill Davis", room: "Roosevelt", category: "Service & Repair" },
+  { day: "Wednesday, July 22", time: "5:30–7:00", title: "Understanding the PTG Technical Exam", presenter: "Debbie Cyr & Exam Team", room: "Fairfax", category: "RPT Exam Classes" },
+  { day: "Wednesday, July 22", time: "5:30–7:00", title: "CTE Tuning Examiner Training", presenter: "Exam Team", room: "Arlington", category: "RPT Exam Classes" },
+
+  // ── Thursday, July 23 ──
+  { day: "Thursday, July 23", time: "8:00–9:30", title: "Double Rep Setup/Historic Tech Innovation", presenter: "Reinert & Branch, Sauter", room: "Potomac IV", category: "Design & History" },
+  { day: "Thursday, July 23", time: "8:00–9:30", title: "Understanding Finishes New and Old", presenter: "Greg Cheng", room: "Conference Th.", category: "Service & Repair" },
+  { day: "Thursday, July 23", time: "8:00–9:30", title: "Aural Tuning – Mastering the Mid-Range", presenter: "Rick Butler", room: "Washington A", category: "Tuning" },
+  { day: "Thursday, July 23", time: "8:00–9:30", title: "C. Bechstein Hybrid Concert Tuning", presenter: "Torben Garlin, C. Bechstein", room: "Potomac VI", category: "Tuning" },
+  { day: "Thursday, July 23", time: "8:00–9:30", title: "String Leveling and Other Bendables", presenter: "Charles Faulk", room: "Lincoln", category: "Voicing & Concert" },
+  { day: "Thursday, July 23", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "3D Modeling with AI Integration in Piano Technology", presenter: "Dr. Li Yeoh", room: "Fairfax", category: "Design & History" },
+  { day: "Thursday, July 23", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "Genio Silent System Installation Uprights & Grands", presenter: "M. Krol, PianoPiano", room: "Jefferson", category: "Players" },
+  { day: "Thursday, July 23", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "The Sound of Your Tuning", presenter: "Don Mannino", room: "Washington B", category: "Tuning" },
+  { day: "Thursday, July 23", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "Grand Piano Voicing - a Picture to Follow", presenter: "Joachim Leonardy, Jahn", room: "Potomac III", category: "Voicing & Concert" },
+  { day: "Thursday, July 23", time: "8:00–9:30 to 3:45–5:15", multi: true, title: "Grand Regulation Actionpalooza", presenter: "Rick Baldassin & Carl Teel", room: "Tidewater II", category: "Action Regulation" },
+  { day: "Thursday, July 23", time: "8:00–9:30 to 3:45–5:15", multi: true, title: "Action Geometry Restore/Replace Keyboards", presenter: "Reyburn, Reyburn, & Hughes", room: "Arlington", category: "Rebuilding & Shop" },
+  { day: "Thursday, July 23", time: "8:00–9:30 to 3:45–5:15", multi: true, title: "Piano Technicians Playground", presenter: "Playground Team", room: "Roosevelt", category: "Service & Repair" },
+  { day: "Thursday, July 23", time: "10:30–12:00", title: "Career Stability", presenter: "Ed Foote", room: "Potomac IV", category: "Business & Networking" },
+  { day: "Thursday, July 23", time: "10:30–12:00", title: "Sustained Growth", presenter: "Ty Uphoff & Ashley Vinson", room: "Conference Th.", category: "Business & Networking" },
+  { day: "Thursday, July 23", time: "10:30–12:00", title: "Sustain Your Career: Ergonomics for the Enduring Technician", presenter: "N. Litterski", room: "Lincoln", category: "Health" },
+  { day: "Thursday, July 23", time: "10:30–12:00", title: "(Vintage) Electric Pianos for Dummies", presenter: "Emma Kleidon", room: "Potomac VI", category: "Service & Repair" },
+  { day: "Thursday, July 23", time: "10:30–12:00", title: "Piano Stability: Will It Hold?", presenter: "Barbara Campbell", room: "Washington A", category: "Tuning" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "Key Weights Set Once in Factory - Model for the Industry", presenter: "D. Stanwood", room: "Potomac VI", category: "Design & History" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "Sustain Your Career: Ergonomics for the Enduring Technician", presenter: "N. Litterski", room: "Lincoln", category: "Health" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "Steinway Spirio Technology", presenter: "Georgia Maldonado, Steinway", room: "Washington A", category: "Players" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "All About Bridges", presenter: "Jude Reveley & Bruce Clark", room: "Conference Th.", category: "Rebuilding & Shop" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "Install Piano Life Saver Grand Humidity Sys. w/Undercover", presenter: "G. Bonfietti", room: "Fairfax", category: "Service & Repair" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "It Was My Grandmother's Piano", presenter: "Ward Guthrie", room: "Potomac V", category: "Service & Repair" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "Hammer Technique", presenter: "Jim Geiger", room: "Potomac III", category: "Tuning" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "How Pianos Are Tuned By Ear", presenter: "Dan Levitan", room: "Jefferson", category: "Tuning" },
+  { day: "Thursday, July 23", time: "1:30–3:00", title: "Where to Listen Part 1", presenter: "Nathan Mills", room: "Washington B", category: "Tuning" },
+  { day: "Thursday, July 23", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "Inside the Early Piano", presenter: "Ken Eschete & Rod Regier", room: "Kennedy", category: "Design & History" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Travelling and Burning: Foundations of Alignment", presenter: "Emily Townsend", room: "Fairfax", category: "Action Regulation" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Understand Dampers in Modern Steinway Grand", presenter: "D. DeBiasio, Steinway", room: "Washington A", category: "Action Regulation" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "The Business of Moving", presenter: "Gary Telleen & Rebecca Dowds", room: "Jefferson", category: "Business & Networking" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Experience of a Piano Manufacturer", presenter: "Anna Prousek, Petrof", room: "Potomac V", category: "Business & Networking" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Grand Action Reconditioning", presenter: "Norman Cantrell", room: "Potomac VI", category: "Rebuilding & Shop" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Next Generation UV Cure Polyester Finish Repair", presenter: "J. Farris & M. Williams", room: "Conference Th.", category: "Service & Repair" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Where to Listen Part 2", presenter: "Nathan Mills", room: "Washington B", category: "Tuning" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Efficient and Effective Tone Regulation", presenter: "Dennis Johnson", room: "Potomac III", category: "Voicing & Concert" },
+  { day: "Thursday, July 23", time: "3:45–5:15", title: "Voicing Efficiently: The Powered Voicing Tool", presenter: "Ben Cross", room: "Lincoln", category: "Voicing & Concert" },
+  { day: "Thursday, July 23", time: "5:30–7:00", title: "iRCT Tuning with Two AIs", presenter: "Carl Lieberman, Reburn CyberTuner", room: "Lincoln", category: "ETDs" },
+  { day: "Thursday, July 23", time: "5:30–7:00", title: "Tuning with PianoMeter", presenter: "Anthony Willey, PianoMeter", room: "Jefferson", category: "ETDs" },
+  { day: "Thursday, July 23", time: "5:30–7:00", title: "PTG Member Orientation", presenter: "Jason Cassel & Daniel Haubert", room: "Conference Th.", category: "Forums" },
+  { day: "Thursday, July 23", time: "5:30–7:00", title: "Understanding the RPT Written Exam", presenter: "Exam Team", room: "Fairfax", category: "RPT Exam Classes" },
+  { day: "Thursday, July 23", time: "5:30–7:00", title: "TEC Technical Examiner Training", presenter: "Exam Team", room: "Exam Room, TBA", category: "RPT Exam Classes" },
+
+  // ── Friday, July 24 ──
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Three Regulations", presenter: "Ed Foote", room: "Potomac VI", category: "Action Regulation" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Get CAUT 101: Intro to College & University Tech Life", presenter: "Corie Melaugh", room: "Potomac IV", category: "CAUT" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Tuning in to Trouble", presenter: "Eva Jeffers", room: "Conference Th.", category: "Health" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Steinway Spirio Technology", presenter: "Georgia Maldonado, Steinway", room: "Washington A", category: "Players" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Understand Modern Players, Hybrids, Rise of Silent Systems", presenter: "G. Cheng", room: "Arlington", category: "Players" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Jim's Tools and Tips 2.1", presenter: "Jim Busby", room: "Fairfax", category: "Service & Repair" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Rebuilding the Steinway Pedal Lyre", presenter: "James Carney", room: "Potomac V", category: "Service & Repair" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Understanding the Drop Action Spinet", presenter: "Randy Woltz", room: "Kennedy", category: "Service & Repair" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Baldassin-Sanderson Temperament Masterclass", presenter: "Rick Baldassin", room: "Potomac III", category: "Tuning" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Professional Pin Setting", presenter: "Dan Levitan", room: "Lincoln", category: "Tuning" },
+  { day: "Friday, July 24", time: "8:00–9:30", title: "Angel Shot Voicing", presenter: "Zhiwei Huang", room: "Jefferson", category: "Voicing & Concert" },
+  { day: "Friday, July 24", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "Hands on Harpsichords", presenter: "Michael Reiter & Jason Cassel", room: "Tidewater II", category: "Action Regulation" },
+  { day: "Friday, July 24", time: "8:00–9:30 to 3:45–5:15", multi: true, title: "Piano Technicians Playground", presenter: "Playground Team", room: "Roosevelt", category: "Service & Repair" },
+  { day: "Friday, July 24", time: "8:00–9:30 to 3:45–5:15", multi: true, title: "Under the Lid in 4 Parts", presenter: "Steve Brady", room: "Washington B", category: "Voicing & Concert" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Aftertouch: The Crowning Jewel of Regulation", presenter: "David Reed, Kawai", room: "Lincoln", category: "Action Regulation" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Saucy Sostenuto", presenter: "Ben Cross", room: "Potomac III", category: "Action Regulation" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Understand Dampers in Modern Steinway Grand", presenter: "D. DeBiasio, Steinway", room: "Washington A", category: "Action Regulation" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Grow with Gazelle", presenter: "Luke Ehresman, Gazelle", room: "Potomac V", category: "Business & Networking" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Encouraging Universities to Invest in Your Inventory", presenter: "Renée Kelsey", room: "Potomac IV", category: "CAUT" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Introducing LTV: Yamaha Disklavier/Silent Piano Products", presenter: "Yamaha Team", room: "Kennedy", category: "Players" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Blend Tradition w/Tech: CNC/3D Printing Piano Restoration", presenter: "B. Larson", room: "Fairfax", category: "Rebuilding & Shop" },
+  { day: "Friday, July 24", time: "10:30–12:00", title: "Fazioli Voicing: Factory to Concert Stage", presenter: "Baldassin & Dubay, Fazioli", room: "Potomac VI", category: "Voicing & Concert" },
+  { day: "Friday, July 24", time: "10:30–12:00 to 1:30–3:00", multi: true, title: "Prodigy II: Next Level Service", presenter: "Kirk Burgett & Zach Hardy, PianoDisc", room: "Arlington", category: "Players" },
+  { day: "Friday, July 24", time: "10:30–12:00 to 1:30–3:00", multi: true, title: "The Art of Miking a Piano: Goals and Strategies", presenter: "Peter Clark", room: "Jefferson", category: "Voicing & Concert" },
+  { day: "Friday, July 24", time: "1:30–3:00", title: "The Aftertouch Ballgame", presenter: "Jason Cassel", room: "Potomac VI", category: "Action Regulation" },
+  { day: "Friday, July 24", time: "1:30–3:00", title: "Principles of Bench Regulation", presenter: "Ben Rocke", room: "Potomac III", category: "Action Regulation" },
+  { day: "Friday, July 24", time: "1:30–3:00", title: "Working on the Oddballs: Celestas, Portatives and Others", presenter: "Corbin Sturch", room: "Potomac IV", category: "CAUT" },
+  { day: "Friday, July 24", time: "1:30–3:00", title: "Gazelle User Forum", presenter: "Gina Bonfietti", room: "Kennedy", category: "Forums" },
+  { day: "Friday, July 24", time: "1:30–3:00", title: "No Car, No Problem: Mastering Urban Piano Service", presenter: "Anika Byrley", room: "Potomac V", category: "Service & Repair" },
+  { day: "Friday, July 24", time: "1:30–3:00", title: "CTEs Show You How", presenter: "Ward Guthrie & Friends", room: "Washington A", category: "Tuning" },
+  { day: "Friday, July 24", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "3D Modeling with AI Integration in Piano Technology", presenter: "Dr. Li Yeoh", room: "Fairfax", category: "Design & History" },
+  { day: "Friday, July 24", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "How to Design a Piano", presenter: "Delwin D. Fandrich", room: "Lincoln", category: "Design & History" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "The Next Octave: The Future of the Piano Industry", presenter: "Michael Stilwell", room: "Kennedy", category: "Business & Networking" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "CAUT Forum", presenter: "Kate Redding", room: "Potomac IV", category: "CAUT" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "Acoustics Playground", presenter: "Christopher Storch", room: "Arlington", category: "Design & History" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "Grand by Hand: Tech's Tour of NY Steinway Factory", presenter: "B. Gac, Steinway", room: "Washington A", category: "Design & History" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "Upright Hammer Replacement", presenter: "Josi Davis", room: "Potomac V", category: "Rebuilding & Shop" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "The Fundamentals of Moving", presenter: "Gary Telleen & Isaiah Dowds", room: "Jefferson", category: "Service & Repair" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "Next Generation UV Cure Polyester Finish Repair", presenter: "J. Farris & M. Williams", room: "Conference Th.", category: "Service & Repair" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "Troubleshooting Aural Temperaments", presenter: "Emily Townsend", room: "Potomac III", category: "Tuning" },
+  { day: "Friday, July 24", time: "3:45–5:15", title: "C. Bechstein Concert Preparation", presenter: "Torben Garlin, C. Bechstein", room: "Potomac VI", category: "Voicing & Concert" },
+  { day: "Friday, July 24", time: "5:30–7:00", title: "iRCT Tuning with Two AIs", presenter: "Carl Lieberman, Reburn CyberTuner", room: "Lincoln", category: "ETDs" },
+  { day: "Friday, July 24", time: "5:30–7:00", title: "Women's Forum in Piano Technology", presenter: "Ricki Klos", room: "Potomac III", category: "Forums" },
+
+  // ── Saturday, July 25 ──
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "The Lowly Little Back Check", presenter: "Michael Reiter", room: "Lincoln", category: "Action Regulation" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Gut Taxes?", presenter: "John Gallen", room: "Conference Th.", category: "Business & Networking" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Early Evolution of the Piano", presenter: "Fred Sturm", room: "Tidewater II", category: "Design & History" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Lifting Stuff", presenter: "Kathy Smith", room: "Jefferson", category: "Health" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Grand Action Reconditioning", presenter: "Norman Cantrell", room: "Potomac VI", category: "Rebuilding & Shop" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Installation of the Full-Fitted Pinblock", presenter: "Christian Bolduc", room: "Potomac V", category: "Rebuilding & Shop" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Lyre, Lyre, Pants on Fire", presenter: "Debbie Cyr", room: "Potomac IV", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Piano Hammers - Everything You Need for Precision", presenter: "A. & N. Abel, Abel", room: "Kennedy", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Tune - Refine - Confirm", presenter: "Jason Cassel", room: "Washington B", category: "Tuning" },
+  { day: "Saturday, July 25", time: "8:00–9:30", title: "Foundations of Tone in the NY Steinway", presenter: "Daniel DeBiasio, Steinway", room: "Washington A", category: "Voicing & Concert" },
+  { day: "Saturday, July 25", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "When Good Dampers Go Bad", presenter: "Randy Woltz", room: "Potomac III", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "8:00–9:30 to 10:30–12:00", multi: true, title: "Take the RPT Written Exam", presenter: "Greg Cheng", room: "Arlington", category: "RPT Exam Classes" },
+  { day: "Saturday, July 25", time: "8:00–9:30 to 3:45–5:15", multi: true, title: "Vertical Regulation in 4 Parts", presenter: "Lucy Urlacher", room: "Fairfax", category: "Action Regulation" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "Tips and Techniques on Grand Regulation", presenter: "David Reed, Kawai", room: "Lincoln", category: "Action Regulation" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "Double Rep Setup/Historic Tech Innovation", presenter: "Reinert & Branch, Sauter", room: "Potomac IV", category: "Design & History" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "Rebuilding the Vintage Grand Piano, A Look at Early Design", presenter: "Starr Taylor", room: "Tidewater II", category: "Design & History" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "Hearing Aids, Stigmas, and Solutions", presenter: "Erik Martin", room: "Potomac VI", category: "Health" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "AI and the Future of Instrument Entertainment", presenter: "Lori Clutter Harvey, QRS", room: "Kennedy", category: "Players" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "Beyond the Coffee Table: Charting Your Workshop", presenter: "Holly Grodsky", room: "Potomac V", category: "Rebuilding & Shop" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "The Frontweight Foundation", presenter: "David Love", room: "Washington B", category: "Rebuilding & Shop" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "Aural Tuning – Mastering the Mid-Range", presenter: "Rick Butler", room: "Washington A", category: "Tuning" },
+  { day: "Saturday, July 25", time: "10:30–12:00", title: "How Pianos Are Tuned By Ear", presenter: "Dan Levitan", room: "Jefferson", category: "Tuning" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "Bending Grand Damper Wires (BYOT)", presenter: "Rick & John Butler", room: "Tidewater II", category: "Action Regulation" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "Career Stability", presenter: "Ed Foote", room: "Potomac IV", category: "Business & Networking" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "Key Weights Set Once in Factory - Model for the Industry", presenter: "D. Stanwood", room: "Potomac VI", category: "Design & History" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "What is a Good Scale and Why", presenter: "Jude Reveley & Bruce Clark", room: "Conference Th.", category: "Rebuilding & Shop" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "It Was My Grandmother's Piano", presenter: "Ward Guthrie", room: "Potomac V", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "The Journal's Best Tips", presenter: "Scott Cole", room: "Roosevelt", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "If It's Broken, Fix It!", presenter: "Norman Vesprini", room: "Jefferson", category: "Voicing & Concert" },
+  { day: "Saturday, July 25", time: "1:30–3:00", title: "Voicing Efficiently: The Powered Voicing Tool", presenter: "Ben Cross", room: "Lincoln", category: "Voicing & Concert" },
+  { day: "Saturday, July 25", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "Grand Damper Systems Demystified", presenter: "Rick Baldassin & Carl Teel", room: "Washington A", category: "Action Regulation" },
+  { day: "Saturday, July 25", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "Inside the Early Piano", presenter: "Ken Eschete & Rod Regier", room: "Kennedy", category: "Design & History" },
+  { day: "Saturday, July 25", time: "1:30–3:00 to 3:45–5:15", multi: true, title: "Reimagining the Grand Damper Action: WNG", presenter: "B. Stevens & WNG Team", room: "Washington B", category: "Rebuilding & Shop" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "Sustained Growth", presenter: "Ty Uphoff & Ashley Vinson", room: "Conference Th.", category: "Business & Networking" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "Restorative Conservation, Square and Upright", presenter: "Fred Sturm", room: "Jefferson", category: "Rebuilding & Shop" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "Improving Upright Performance, 20 Tips", presenter: "Starr Taylor", room: "Potomac V", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "Lacquer Finish Touch Up", presenter: "Mike Ello", room: "Roosevelt", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "Piano Life Saver Troubleshooting Older Models", presenter: "K. Brown, Dampp-Chaser", room: "Lincoln", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "(Vintage) Electric Pianos for Dummies", presenter: "Emma Kleidon", room: "Potomac VI", category: "Service & Repair" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "Hammer Technique", presenter: "Jim Geiger", room: "Potomac III", category: "Tuning" },
+  { day: "Saturday, July 25", time: "3:45–5:15", title: "First Do No Harm: Beginner's Framework for Voicing", presenter: "Stilwell & Hayes, PTA", room: "Potomac IV", category: "Voicing & Concert" },
+
+  // ── Special ──
+  { day: "Special", time: "9:30–10:30am", title: "LGBTQ+ & Allies Piano Technicians Forum", presenter: "Gina Bonfietti", room: "Kennedy", category: "Forums", note: "Custom time; date not clearly identified in PDF" }
+];
+
+// ─── Category → CSS class mapping ───
+function catClass(cat) {
+  const c = cat.toLowerCase();
+  if (c.includes('action')) return 'cat-action';
+  if (c.includes('business')) return 'cat-business';
+  if (c === 'caut') return 'cat-caut';
+  if (c.includes('design')) return 'cat-design';
+  if (c.includes('etd')) return 'cat-etd';
+  if (c.includes('forum')) return 'cat-forums';
+  if (c.includes('health')) return 'cat-health';
+  if (c.includes('player')) return 'cat-players';
+  if (c.includes('rebuilding')) return 'cat-rebuilding';
+  if (c.includes('rpt')) return 'cat-rpt';
+  if (c.includes('service')) return 'cat-service';
+  if (c.includes('tuning')) return 'cat-tuning';
+  if (c.includes('voicing')) return 'cat-voicing';
+  return '';
+}
+
+// ─── Build UI ───
+const days = [...new Set(schedule.map(s => s.day))];
+const categories = [...new Set(schedule.map(s => s.category))].sort();
+
+// Populate category filter
+const catFilter = document.getElementById('cat-filter');
+categories.forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c; opt.textContent = c;
+  catFilter.appendChild(opt);
+});
+
+const tabsEl = document.getElementById('day-tabs');
+const sectionsEl = document.getElementById('day-sections');
+
+days.forEach((day, i) => {
+  // Tab
+  const btn = document.createElement('button');
+  btn.className = 'day-tab' + (i === 0 ? ' active' : '');
+  btn.textContent = day === 'Special' ? '⭐ Special' : day.split(',')[0];
+  btn.dataset.day = day;
+  btn.addEventListener('click', () => switchDay(day));
+  tabsEl.appendChild(btn);
+
+  // Section
+  const sec = document.createElement('div');
+  sec.className = 'day-section' + (i === 0 ? ' active' : '');
+  sec.id = 'day-' + i;
+  sec.dataset.day = day;
+  sectionsEl.appendChild(sec);
+});
+
+function switchDay(day) {
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.day === day));
+  document.querySelectorAll('.day-section').forEach(s => s.classList.toggle('active', s.dataset.day === day));
+  renderAll();
+}
+
+function renderAll() {
+  const catVal = catFilter.value.toLowerCase();
+  const searchVal = document.getElementById('search-input').value.toLowerCase();
+  let totalShown = 0;
+
+  days.forEach((day, i) => {
+    const sec = document.getElementById('day-' + i);
+    sec.innerHTML = '';
+
+    const dayClasses = schedule.filter(s => {
+      if (s.day !== day) return false;
+      if (catVal && s.category.toLowerCase() !== catVal) return false;
+      if (searchVal) {
+        const hay = (s.title + ' ' + s.presenter + ' ' + s.room + ' ' + s.category).toLowerCase();
+        if (!hay.includes(searchVal)) return false;
+      }
+      return true;
+    });
+
+    // Group by time
+    const timeOrder = [];
+    const timeMap = {};
+    dayClasses.forEach(c => {
+      if (!timeMap[c.time]) { timeOrder.push(c.time); timeMap[c.time] = []; }
+      timeMap[c.time].push(c);
+    });
+
+    if (dayClasses.length === 0) {
+      sec.innerHTML = '<p style="color:var(--muted);padding:1rem;">No classes match your filters.</p>';
+    }
+
+    timeOrder.forEach(time => {
+      const group = document.createElement('div');
+      group.className = 'time-group';
+      const h = document.createElement('h3');
+      h.textContent = time.includes('to') ? '🕐 ' + time + ' (multi-period)' : '🕐 ' + time;
+      group.appendChild(h);
+
+      timeMap[time].forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'class-card ' + catClass(c.category);
+        card.innerHTML = `
+          <div>
+            <div class="class-title">${c.title}</div>
+            <div class="class-presenter">${c.presenter}</div>
+            ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
+          </div>
+          <div class="class-meta">
+            <div class="class-room">📍 ${c.room}</div>
+            <span class="class-category">${c.category}</span>
+            ${c.multi ? '<div class="multi-period">⏱ Multi-period</div>' : ''}
+          </div>
+        `;
+        group.appendChild(card);
+      });
+
+      sec.appendChild(group);
+      totalShown += timeMap[time].length;
+    });
+  });
+
+  document.getElementById('class-count').textContent = totalShown + ' classes shown';
+}
+
+catFilter.addEventListener('change', renderAll);
+document.getElementById('search-input').addEventListener('input', renderAll);
+document.getElementById('reset-btn').addEventListener('click', () => {
+  catFilter.value = '';
+  document.getElementById('search-input').value = '';
+  renderAll();
+});
+
+renderAll();
+</script>
+
+</body>
+</html>
