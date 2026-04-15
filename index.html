@@ -150,8 +150,7 @@
     .level-intermediate { background: #fef3c7; color: #92400e; }
     .level-advanced     { background: #fee2e2; color: #991b1b; }
     .level-all          { background: #e0e7ff; color: #3730a3; }
-    .class-desc-toggle { cursor:pointer; color:var(--muted); font-size:0.75rem; margin-left:0.4rem; opacity:0.7; }
-    .class-desc-toggle:hover { opacity:1; }
+    .class-card { cursor:pointer; }
     .class-desc { display:none; font-size:0.78rem; color:var(--muted); margin-top:0.2rem; line-height:1.3; }
     .class-desc.open { display:block; }
 
@@ -880,7 +879,7 @@ function renderMySchedule() {
         const descId = 'msdesc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn saved" onclick="toggleSelectionByKey('${classKey(c).replace(/'/g, "\\'")}')" title="Remove from My Schedule">⭐</button>${desc ? `<span class="class-desc-toggle" onclick="document.getElementById('${descId}').classList.toggle('open')" title="Show description">ℹ️</span>` : ''}</div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn saved" title="Remove from My Schedule">⭐</button></div>
             <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
           </div>
@@ -890,6 +889,9 @@ function renderMySchedule() {
             ${c.multi ? '<div class="multi-period">⏱ Multi-period</div>' : ''}
           </div>
         `;
+        const bmBtn = card.querySelector('.bookmark-btn');
+        bmBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSelectionByKey(classKey(c)); });
+        if (desc) { card.addEventListener('click', () => { document.getElementById(descId).classList.toggle('open'); }); }
         group.appendChild(card);
       });
       container.appendChild(group);
@@ -980,7 +982,7 @@ function renderAll() {
         const descId = 'desc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule">☆</button>${desc ? `<span class="class-desc-toggle" onclick="event.stopPropagation(); document.getElementById('${descId}').classList.toggle('open')" title="Show description">ℹ️</span>` : ''}</div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule">☆</button></div>
             <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
@@ -995,6 +997,7 @@ function renderAll() {
         const bmBtn = card.querySelector('.bookmark-btn');
         bmBtn.textContent = sel ? '⭐' : '☆';
         bmBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSelection(c); });
+        if (desc) { card.addEventListener('click', () => { document.getElementById(descId).classList.toggle('open'); }); }
         group.appendChild(card);
       });
 
