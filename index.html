@@ -146,9 +146,14 @@
       white-space: nowrap;
     }
     .level-beginner     { background: #dcfce7; color: #166534; }
+    .level-foundational { background: #dbeafe; color: #1e40af; }
     .level-intermediate { background: #fef3c7; color: #92400e; }
     .level-advanced     { background: #fee2e2; color: #991b1b; }
     .level-all          { background: #e0e7ff; color: #3730a3; }
+    .class-desc-toggle { cursor:pointer; color:var(--muted); font-size:0.75rem; margin-left:0.4rem; opacity:0.7; }
+    .class-desc-toggle:hover { opacity:1; }
+    .class-desc { display:none; font-size:0.78rem; color:var(--muted); margin-top:0.2rem; line-height:1.3; }
+    .class-desc.open { display:block; }
 
     /* Level legend */
     .level-legend {
@@ -266,14 +271,15 @@
   </div>
 
   <div class="level-legend">
-    <span class="label">Difficulty Levels:</span>
-    <div class="legend-item"><span class="level-badge level-beginner">🟢 Beginner</span> Introductory &amp; foundational</div>
-    <div class="legend-item"><span class="level-badge level-intermediate">🟡 Intermediate</span> Working knowledge assumed</div>
-    <div class="legend-item"><span class="level-badge level-advanced">🔴 Advanced</span> Deep dives &amp; masterclasses</div>
-    <div class="legend-item"><span class="level-badge level-all">⚪ All Levels</span> Forums, exams &amp; general interest</div>
+    <span class="label">Suggested Levels (from PTG):</span>
+    <div class="legend-item"><span class="level-badge level-beginner">🟢 Introductory</span></div>
+    <div class="legend-item"><span class="level-badge level-foundational">🔵 Foundational</span></div>
+    <div class="legend-item"><span class="level-badge level-intermediate">🟡 Intermediate</span></div>
+    <div class="legend-item"><span class="level-badge level-advanced">🔴 Advanced</span></div>
+    <div class="legend-item"><span class="level-badge level-all">⚪ Everyone</span></div>
   </div>
   <div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.75rem; font-style:italic;">
-    ℹ️ Difficulty levels are inferred from class titles and categories — the original PDF does not include explicit levels.
+    ℹ️ Levels and descriptions sourced from <a href="https://www.ptgconvention.com/classes-1" target="_blank" style="color:inherit;">ptgconvention.com</a>. Click ℹ️ on any class for details.
   </div>
 
   <div class="filter-bar">
@@ -282,10 +288,11 @@
     <label for="level-filter">Level:</label>
     <select id="level-filter">
       <option value="">All Levels</option>
-      <option value="Beginner">🟢 Beginner</option>
+      <option value="Introductory">🟢 Introductory</option>
+      <option value="Foundational">🔵 Foundational</option>
       <option value="Intermediate">🟡 Intermediate</option>
       <option value="Advanced">🔴 Advanced</option>
-      <option value="All Levels">⚪ All Levels</option>
+      <option value="Everyone">⚪ Everyone</option>
     </select>
     <label for="search-input">Search:</label>
     <input type="text" id="search-input" placeholder="Class name, presenter, room…">
@@ -508,69 +515,165 @@ function catClass(cat) {
 }
 
 // ─── Difficulty level inference ───
+// Official levels and descriptions from ptgconvention.com/classes-1
+const classInfo = {
+  "The Aftertouch Ballgame": { level: "Intermediate", desc: "What is Aftertouch? Why is it important? What regulation points influence it? How is it set on an upright and a grand?" },
+  "Aftertouch: The Crowning Jewel of Regulation": { level: "Advanced", desc: "Unravel the mystery of aftertouch with techniques for great results, drawing on extensive experience as a private technician and multiple piano companies." },
+  "Bending Grand Damper Wires (BYOT)": { level: "Everyone", desc: "Install a damper head with wire into the piano. Slide/video presentation then hands-on. BYOT: needle nose pliers, small screwdriver, bending pliers." },
+  "Grand Damper Systems Demystified": { level: "Everyone", desc: "Cutting/bending damper wires, adjusting underlever spoons and capstans, correcting twisting and traveling during lift. Demo on PTG 3-note Renner model." },
+  "Grand Regulation Actionpalooza": { level: "Intermediate/Advanced", desc: "All-day hands-on: diagnose action model problems then regulate a PTG test model step-by-step. Limited to 16 students. Pre-registration required. Fee: $120." },
+  "Hands on Harpsichords": { level: "Foundational", desc: "Two-period hands-on: tools and skills for harpsichord action service, voicing plectra and regulating jacks on actual models." },
+  "The Lowly Little Back Check": { level: "Introductory/Intermediate", desc: "All things back check, grand and upright: construction, regulation, wear problems. Great for beginners and intermediate technicians." },
+  "Principles of Bench Regulation": { level: "Everyone", desc: "Grand action regulation on the bench — sampling, setup, regulation protocols, returning the action, and hybrid regulations." },
+  "Saucy Sostenuto": { level: "Introductory/Foundational", desc: "Sostenuto regulation techniques regardless of mechanism style. From action-mounted to belly-mounted, learn tests and checks." },
+  "Three Regulations": { level: "Intermediate", desc: "Three levels of regulation and how to sell them — from tuning appointment add-ons to maximizing an action's capability for response." },
+  "Tips and Techniques on Grand Regulation": { level: "Everyone", desc: "Best techniques for getting each regulation step done quickly and accurately." },
+  "Travelling and Burning: Foundations of Alignment": { level: "Introductory/Foundational", desc: "Diagnose and fix hammer travel and rubbing problems. Train your eyes to spot these behaviors. Limited hands-on jigs — arrive early!" },
+  "Understand Dampers in Modern Steinway Grand": { level: "Intermediate/Advanced", desc: "Demystifying the damper system in the modern New York Steinway grand: manufacturing, installation, design intention, and field troubleshooting." },
+  "Vertical Regulation in 4 Parts": { level: "Everyone", desc: "4-period class: signs a piano needs regulation, setting sample notes, shaping vertical hammers, key level, let-off, and key-dip." },
+  "Business is GRAND": { level: "Everyone", desc: "Aspects applicable to any service business: Getting, Resourcing, Assembling, Networking, Delivering." },
+  "The Business of Moving": { level: "Everyone", desc: "Start and operate a piano moving business — operations, pricing, strategy. Companion to The Fundamentals of Moving." },
+  "Career Stability": { level: "Introductory/Foundational", desc: "Money, competition, ethics — things I wish I had known earlier. Planning for a flourishing career." },
+  "The Class on Teaching the Class": { level: "Everyone", desc: "Craft a valuable chapter/convention class: choosing a topic, target audience, material focus, presentation modes, and classroom management." },
+  "Experience of a Piano Manufacturer": { level: "Everyone", desc: "Inside look at how fine instruments are created at Petrof and how the business operates globally." },
+  "Grow with Gazelle": { level: "Foundational", desc: "Save time and grow your business with Gazelle: online scheduling, automated reminders, invoices, payments, and QuickBooks integration." },
+  "Gut Taxes?": { level: "Everyone", desc: "Keep more of your dollars. Common business expenses for the self-employed piano technician." },
+  "How to Be an Effective Playground Facilitator": { level: "Foundational/Everyone", desc: "Practical tips for running a Playground event: training facilitators, promotion, planning guide, and real-time tracking." },
+  "The Next Octave: The Future of the Piano Industry": { level: "Everyone", desc: "Current state of the piano industry, where it's headed, and how global trends shape the future for piano stores and technicians." },
+  "Sustained Growth": { level: "Everyone", desc: "Smart marketing, customer service, digital tools, first hires, expanding markets, and acquiring businesses from other technicians." },
+  "Voicing Your Business": { level: "Foundational", desc: "Managing the voice of your business across email, text, phone, and in-person communications." },
+  "CAUT Forum": { level: "Everyone", desc: "Forum hosted by the PTG CAUT Committee for exchanging ideas and learning about ongoing initiatives." },
+  "Encouraging Universities to Invest in Your Inventory": { level: "Everyone", desc: "Organizing institutional inventory to justify new piano purchases. Strategies for engaging non-technical decision-makers." },
+  "Get CAUT 101: Intro to College & University Tech Life": { level: "Everyone", desc: "General overview of CAUT life: university size, department scope, instruments, budget, and useful digital tools." },
+  "Working on the Oddballs: Celestas, Portatives and Others": { level: "Everyone", desc: "Approaching and servicing oddball instruments like Portative organs, celestas, or autoharps." },
+  "3D Modeling with AI Integration in Piano Technology": { level: "Everyone", desc: "Design piano components with AI precision, generative design, and automated prototyping. Bring your laptop with a 3D mouse!" },
+  "Acoustics Playground": { level: "Everyone", desc: "Spectral analysis, hearing/perception phenomena, physics of vibrating piano strings, and room acoustics." },
+  "Double Rep Setup/Historic Tech Innovation": { level: "Everyone", desc: "Preparing an upright with double repetition action: regulation, performance optimization, plus European piano maker history." },
+  "Early Evolution of the Piano": { level: "Everyone", desc: "How two distinct 1760s London piano designs — rectangular and grand-shaped — developed into what we have today." },
+  "Grand by Hand: Tech's Tour of NY Steinway Factory": { level: "Everyone", desc: "Video-rich virtual tour inside the Steinway & Sons NY factory, designed specifically for piano technicians." },
+  "How to Design a Piano": { level: "Intermediate/Advanced", desc: "Introduction to piano design: developing a design cartoon for a small grand and discussing how rebuilders can make it." },
+  "Inside the Early Piano": { level: "Everyone", desc: "Two sessions: slide lecture on wood-framed Viennese fortepiano construction, then hands-on regulation with a 5-octave fortepiano." },
+  "Key Weights Set Once in Factory - Model for the Industry": { level: "Everyone", desc: "Smoothly scaled key front weights as a permanent design feature, creating a solid foundation for balancing actions." },
+  "Rebuilding the Vintage Grand Piano, A Look at Early Design": { level: "Intermediate/Advanced", desc: "Comparing an 1893 Knabe to a 1902 Steinway A2: rim construction, plate support, soundboard angles, bridge design, and more." },
+  "iRCT Tuning with Two AIs": { level: "Intermediate", desc: "CyberTuner's newest AI features with answers for varied tuning questions and customized tunings for each piano." },
+  "Tuning with PianoMeter": { level: "Everyone", desc: "PianoMeter's time-saving features and expert tips for cleaner unisons and stable tuning. New user overview included." },
+  "Take the RPT Written Exam": { level: "Everyone", desc: "Opportunity to take the RPT Written Exam at convention. Pre-registration required. Bring internet device and PTG card." },
+  "Understanding the PTG Technical Exam": { level: "Everyone", desc: "Walk-through of Technical Exam requirements with equipment examples. Preview of new 3-note grand model. Prep tips." },
+  "Understanding the RPT Written Exam": { level: "Everyone", desc: "Tuning Exam procedure details and preparation tips. For PTG members only." },
+  "CTE Tuning Examiner Training": { level: "Everyone", desc: "For RPTs interested in becoming a Certified Tuning Examiner. Exam administration and problem-solving tips." },
+  "TEC Technical Examiner Training": { level: "Everyone", desc: "Requirements to become a Technical Examiner, Certified (TEC). For RPTs only — must RSVP by July 8." },
+  "Gazelle User Forum": { level: "Everyone", desc: "User-only session for sharing experiences and improving Gazelle. A team member available for Q&A." },
+  "LGBTQ+ & Allies Piano Technicians Forum": { level: "Everyone", desc: "How identity and professional practice intersect in piano technology. Sharing experiences and strategies. Allies welcome." },
+  "PTG Member Orientation": { level: "Everyone", desc: "Hidden gems of PTG membership, PTG structure, and committee functions." },
+  "Women's Forum in Piano Technology": { level: "Everyone", desc: "Open circle forum about being female in the industry — challenges and successes, beginners to veterans." },
+  "Hearing Aids, Stigmas, and Solutions": { level: "Everyone", desc: "How hearing aids function, experiences as a HOH/deaf technician, and navigating the industry as a disabled individual." },
+  "Lifting Stuff": { level: "Everyone", desc: "Mechanical advantage and safe body mechanics for lifting actions, piano corners, and more. Photos, demos, participation." },
+  "Sustain Your Career: Ergonomics for the Enduring Technician": { level: "Everyone", desc: "Yoga-inspired stretches, PT exercises, ergonomic techniques and ambidexterity for sustainable piano service." },
+  "Tuning in to Trouble": { level: "Everyone", desc: "Crisis prevention: identifying red flags, communication skills, de-escalating tense situations, and safe work practices." },
+  "AI and the Future of Instrument Entertainment": { level: "Everyone", desc: "QRS Music Technologies' new AI capabilities and PNOmation systems. Generate additional revenue for your business." },
+  "Genio Silent System Installation Uprights & Grands": { level: "Everyone", desc: "Install the Genio Silent System on practically any upright or grand. MIDI out, recording and silent play features." },
+  "Introducing LTV: Yamaha Disklavier/Silent Piano Products": { level: "Intermediate/Advanced", desc: "Yamaha Lifetime Value products: latest Disklavier & Silent technology upgrades and retrofit installations." },
+  "Prodigy II: Next Level Service": { level: "Intermediate", desc: "Two-period class on PianoDisc Prodigy II: calibration and connecting with external devices." },
+  "Steinway Spirio Technology": { level: "Everyone", desc: "Overview of Spirio technology, servicing experience, and Steinway resources for technicians." },
+  "Understand Modern Players, Hybrids, Rise of Silent Systems": { level: "Everyone", desc: "Overview of modern player systems, hybrid acoustic/digital designs, and silent systems. Installation and troubleshooting." },
+  "Action Geometry Demystified": { level: "Foundational", desc: "The 4 Fundamental Questions for selecting new action parts for your next action rebuild." },
+  "Action Geometry Restore/Replace Keyboards": { level: "Everyone", desc: "All-day: demystify action geometry, evaluate keyboards for replacement, basic weigh-off, and fitting new parts." },
+  "All About Bridges": { level: "Advanced", desc: "Rebuilding bridges: design, layout, execution, notching, and manufacturing new bridges." },
+  "Bearing vs Crown": { level: "Foundational", desc: "Soundboard construction: how crown bearing and termination function together to influence sound quality." },
+  "Beyond the Coffee Table: Charting Your Workshop": { level: "Introductory/Everyone", desc: "Plot a course toward a full workshop: acquiring tools gradually and arranging space so the shop grows with you." },
+  "Blend Tradition w/Tech: CNC/3D Printing Piano Restoration": { level: "Everyone", desc: "CNC machining and 3D printing for piano technology: CAD-based digital fabrication, custom solutions, and innovation." },
+  "The Frontweight Foundation": { level: "Intermediate/Advanced", desc: "Ideal strike weight curve through empirical sampling. Pre-determining Front Weight and Balance Weight as diagnostic constants." },
+  "Grand Action Reconditioning": { level: "Everyone", desc: "Refurbishing existing parts when matching new parts aren't available: wippen cushion felt to rebushing and repining flanges." },
+  "Grand Hammer Replacement": { level: "Everyone", desc: "Hammer selection, touchweight and weight control. Proper measurements, preparation, and hammer hanging process." },
+  "If I Had a Hammer": { level: "Intermediate/Advanced", desc: "Choosing replacement hammers: manufacturer vs aftermarket, features that affect choices." },
+  "Installation of the Full-Fitted Pinblock": { level: "Everyone", desc: "Replacing a full-fitted grand pinblock A to Z: references, plate pulling, drilling, glue and doweling. Tips and tricks." },
+  "Recap the Vertical Bass Bridge without Removing the Plate": { level: "Everyone", desc: "Replace split bridge caps on uprights without pulling the plate. Build a jig over the plate. Also applicable to grands." },
+  "Reimagining the Grand Damper Action: WNG": { level: "Foundational", desc: "Wessell, Nickel and Gross damper action replacement: custom tool kit, part selection, drilling, and assembly." },
+  "Restorative Conservation, Square and Upright": { level: "Everyone", desc: "Restoring an 1839 American square and an 1852 French pianino. Retaining original parts where possible." },
+  "Upright Hammer Replacement": { level: "Everyone", desc: "Techniques for hanging upright hammers in and out of the piano. Market parts and opportunities to improve." },
+  "What is a Good Scale and Why": { level: "Advanced", desc: "Piano scale design: tension level, inharmonicity, bass break placement, unichord/bichord/trichord counts." },
+  "1/2 Day Grand Piano Service": { level: "Intermediate", desc: "Sell a half-day service on 10-30 year old grands: cleaning, regulation, plate tightening, bushing ironing, hammer filing." },
+  "Bösendorfer Technical Presentation": { level: "Intermediate/Advanced", desc: "A technical presentation by the Bösendorfer Team, topic to be announced." },
+  "The Fundamentals of Moving": { level: "Everyone", desc: "Essential tools, equipment, and step-by-step methods for safely moving grand and upright pianos." },
+  "From Sheep to Hammer": { level: "Everyone", desc: "From raw sheep's wool to high-quality hammer felt. Virtual ABEL HAMMER factory tour. Voicing, hardness, and felt resilience." },
+  "Improving Upright Performance, 20 Tips": { level: "Intermediate", desc: "Whole piano system: tuning instability, bedding actions, ironing key bushings, damper rod and pedal issues." },
+  "Install Piano Life Saver Grand Humidity Sys. w/Undercover": { level: "Everyone", desc: "Installing the Piano Life Saver Grand System with faster, neater undercover method. Step-by-step." },
+  "Introduction to the Piano Life Saver System": { level: "Introductory", desc: "Overview of product functions, system selection, basic installation, and service for the Dampp-Chaser system." },
+  "It Was My Grandmother's Piano": { level: "Foundational/Intermediate", desc: "Uprights: troubleshooting, building estimates, priority lists, selling jobs, and earning income beyond basic service calls." },
+  "The Jansen Artist Bench: Anatomy, Service & Repair": { level: "Everyone", desc: "Rejuvenating worn Jansen Artist Benches: PowerPoint lecture then demonstration of service procedures." },
+  "Jim's Tools and Tips 2.1": { level: "Everyone", desc: "More tips, tricks and tools for service calls and shop work. Fast-paced with giveaways!" },
+  "The Journal's Best Tips": { level: "Everyone", desc: "Best Tips, Tools & Techniques from decades of the Journal. How to find articles using indexes. Giveaways!" },
+  "Lacquer Finish Touch Up": { level: "Everyone", desc: "Lacquer touch-up repairs from simple to advanced, plus estimating labor and pricing." },
+  "Lyre, Lyre, Pants on Fire": { level: "Intermediate", desc: "All kinds of grand lyres: repairing unglued posts, pedal box tour, and Steinway lyre installation demo." },
+  "Next Generation UV Cure Polyester Finish Repair": { level: "Everyone", desc: "Revolutionary Avant UV Coatings for high gloss poly repair. Hands-on including corner and vertical damage." },
+  "No Car, No Problem: Mastering Urban Piano Service": { level: "Everyone", desc: "Full-service technician without a car: portable toolkit, route planning with public transit, and on-site techniques." },
+  "Piano Hammers - Everything You Need for Precision": { level: "Everyone", desc: "ABEL hammer options: undrilled, standard drilled, fully customized. Refelting, square grand hammers, pre-hung services." },
+  "Piano Life Saver Troubleshooting Older Models": { level: "Foundational/Intermediate", desc: "Servicing older Piano Life Saver models. Component evolution over 75 years. Historic to current compatibility." },
+  "Piano Technicians Playground": { level: "Foundational/Everyone", desc: "Hands-on multiple workstations, all levels. Step-by-step tasks, no time constraints. Wi-Fi device with headphones required." },
+  "Rebuilding the Steinway Pedal Lyre": { level: "Introductory/Foundational", desc: "Hands-on: rebuild and replace crucial Steinway pedal lyre parts for maximum performance and quiet operation." },
+  "Understanding Finishes New and Old": { level: "Everyone", desc: "From shellac to polyester: composition, appearance, behavior, repair techniques for each finish type." },
+  "Understanding the Drop Action Spinet": { level: "Everyone", desc: "Pitfalls of the drop action and how to talk to your customer. Restringing, action overhaul, even new pin blocks." },
+  "(Vintage) Electric Pianos for Dummies": { level: "Everyone", desc: "Tune/service Wurlitzer and Rhodes electric pianos. Common pitfalls for unknowing technicians." },
+  "What is a Piano Key?": { level: "Everyone", desc: "Keys play roles in regulation, touch weight, and cosmetics. Tips for efficiently servicing and repairing keyboards." },
+  "When Good Dampers Go Bad": { level: "Everyone", desc: "Two parts: diagnosing field damper problems, then restoring/overhauling — felt replacement, rebushing, timing, and more." },
+  "Aural Tuning – Mastering the Mid-Range": { level: "Intermediate/Advanced", desc: "Interval comparisons for temperament, Closed Interval Groups strategy, benefits of the minor third in the mid-range." },
+  "Baldassin-Sanderson Temperament Masterclass": { level: "Everyone", desc: "Aural temperament taught step-by-step as a masterclass. Class members tune one note at a time. Bring your tuning lever!" },
+  "Bulletproof Tuning": { level: "Everyone", desc: "Techniques and strategies before, during, and after tuning for best stability. From the revised book Under the Lid." },
+  "C. Bechstein Hybrid Concert Tuning": { level: "Everyone", desc: "Musical and stable aural tuning of concert pianos with a tuning device. Adjustments for different performance contexts." },
+  "CTEs Show You How": { level: "Everyone", desc: "Five CTEs demonstrate hammer technique, stability, perfect unisons, pin/string management, and setting A-440." },
+  "Hammer Technique": { level: "Everyone", desc: "Can a string be tuned so well it cannot be knocked out of tune? Consider the tuning pin, string, block, tools, and conditions." },
+  "How Pianos Are Tuned By Ear": { level: "Everyone", desc: "Aspects of interval sounds that piano tuners pay attention to and manipulate as they work." },
+  "Piano Stability: Will It Hold?": { level: "Introductory/Foundational", desc: "Four factors affecting tuning stability: piano design, condition, playing styles, and temperature/humidity." },
+  "Professional Pin Setting": { level: "Everyone", desc: "Bulletproof stability using C-shaped tuning hammers, separating turning and tilting forces on a tuning pin." },
+  "The Sound of Your Tuning": { level: "Everyone", desc: "How temperament types, octave stretch, and stability affect piano tone. Two matched pianos demonstrated." },
+  "Troubleshooting Aural Temperaments": { level: "Intermediate", desc: "Streamlined logical approaches to aural troubleshooting. Practice diagnosing temperament problems together." },
+  "Tune - Refine - Confirm": { level: "Everyone", desc: "System for developing aural skills on-the-go. Interactive quizzes via phone." },
+  "The Ultimate Puzzle: The Aural Temperament": { level: "Everyone", desc: "Tips for setting temperament: parallel intervals, interval ratios, coincidental partials, test notes, and sequences." },
+  "Where to Listen Part 1": { level: "Introductory/Foundational", desc: "Recognizing intervals and where to listen while tuning Part 1 of the tuning exam. Sliding 4th temperament demo." },
+  "Where to Listen Part 2": { level: "Foundational", desc: "Checks needed for Part 2 of the tuning exam. Expanding the sliding 4th temperament from Part 1." },
+  "Angel Shot Voicing": { level: "Everyone", desc: "Fast, easy technique to soften loud, harsh-sounding hammers. Voice an entire piano in 15 minutes. No needles required." },
+  "The Art of Miking a Piano: Goals and Strategies": { level: "Everyone", desc: "How microphone selection and placement impact tonal balance, clarity, and realism." },
+  "C. Bechstein Concert Preparation": { level: "Everyone", desc: "Preparing a C. Bechstein Concert piano: tuning, regulation, voicing, and adaptation to the musician." },
+  "Efficient and Effective Tone Regulation": { level: "Everyone", desc: "Strategize voicing before starting. Methods for different situations: serviced or rock hard hammers, uprights and grands." },
+  "Fazioli Voicing: Factory to Concert Stage": { level: "Everyone", desc: "Fazioli voicing process from production to concert hall. Tips to improve tone quality with demonstration." },
+  "First Do No Harm: Beginner's Framework for Voicing": { level: "Intermediate", desc: "Step-by-step voicing framework starting with regulation, hammer shape, proper mating. Before needles or lacquer." },
+  "Foundations of Tone in the NY Steinway": { level: "Intermediate/Advanced", desc: "Foundational elements when voicing NY Steinway hammers before outlining traditional voicing techniques." },
+  "Grand Piano Voicing - a Picture to Follow": { level: "Intermediate/Advanced", desc: "Understanding why and how a hammer reacts — which actions are helpful and which are bad." },
+  "If It's Broken, Fix It!": { level: "Introductory", desc: "Fast and easy method to fix a broken upright voice. Improve tuning sound and elevate your service call." },
+  "Optimizing Piano Tone": { level: "Everyone", desc: "Optimized hammer setup (travel, squaring, spacing) and hammer/string interaction. Absolute references for voicing prep." },
+  "String Leveling and Other Bendables": { level: "Foundational", desc: "String bending fundamentals for good voicing and tuning. Also useful in damper regulation and upright hammer fitting." },
+  "Under the Lid in 4 Parts": { level: "Intermediate", desc: "4-period: preparing the concert piano, regulating for the artist, tone regulation, and Zen and the art of concert prep." },
+  "Voicing Efficiently: The Powered Voicing Tool": { level: "Intermediate/Advanced", desc: "Traditional voicing plus a patent-pending Powered Voicing Tool — quick, accurate, and mitigates hand pain/fatigue." },
+  "Voicing Fundamentals": { level: "Intermediate/Advanced", desc: "Needle work and hammer hardening for new and existing hammers. Pros and cons of current popular methods." },
+};
+
 function getLevel(item) {
-  const t = item.title.toLowerCase();
-  const cat = item.category.toLowerCase();
+  const info = classInfo[item.title];
+  return info ? info.level : 'Everyone';
+}
 
-  // All Levels: forums, exams, orientation, playground, health/wellness, business/networking, manufacturer presentations
-  if (cat.includes('forum')) return 'All Levels';
-  if (cat.includes('rpt')) return 'All Levels';
-  if (cat.includes('health')) return 'All Levels';
-  if (t.includes('orientation')) return 'All Levels';
-  if (t.includes('playground')) return 'All Levels';
-  if (t.includes('forum')) return 'All Levels';
-
-  // Beginner: introductory, 101, fundamentals, "what is", "for dummies", beginner, "how pianos are tuned"
-  const beginnerPatterns = [
-    /\bintro\b/, /\bintroduction\b/, /\b101\b/, /\bfundamental/, /\bwhat is\b/,
-    /\bfor dummies\b/, /\bbeginner/, /\bfirst do no harm\b/,
-    /\bhow pianos are tuned by ear\b/, /\bunderstanding the drop action\b/,
-    /\bit was my grandmother/, /\blifting stuff\b/, /\bcareer stability\b/,
-    /\bgrow with gazelle\b/, /\bsustained growth\b/, /\bvoicing your business\b/,
-    /\bgut taxes\b/, /\bbusiness is grand\b/, /\bthe class on teaching\b/,
-    /\bptg member\b/, /\bwhat is a piano key\b/, /\bwhat is a good scale\b/
-  ];
-  for (const p of beginnerPatterns) {
-    if (p.test(t)) return 'Beginner';
-  }
-
-  // Advanced: masterclass, mastering, multi-period deep workshops, "demystified" (implies taming complexity),
-  // "actionpalooza" (full-day), "4 parts", concert prep, reimagining, restore/replace
-  const advancedPatterns = [
-    /\bmasterclass\b/, /\bmastering\b/, /\bactionpalooza\b/,
-    /\bin 4 parts\b/, /\bconcert preparation\b/, /\bconcert tuning\b/,
-    /\breimaginat?ing\b/, /\brestore\/replace\b/, /\bdemystified\b/,
-    /\bbulletproof tuning\b/, /\bultimate puzzle\b/, /\bbaldassin-sanderson\b/,
-    /\bgrand damper systems\b/, /\bvertical regulation in 4\b/,
-    /\bunder the lid in 4\b/, /\bbearing vs crown\b/,
-    /\b3d modeling with ai\b/, /\bhow to design a piano\b/,
-    /\btroubleshooting aural\b/, /\bgrand piano voicing.*picture\b/,
-    /\boptimizing piano tone\b/, /\bkey weights set once\b/,
-    /\bfrontweight foundation\b/, /\baction geometry restore\b/
-  ];
-  for (const p of advancedPatterns) {
-    if (p.test(t)) return 'Advanced';
-  }
-
-  // Business/networking general topics → Beginner-friendly
-  if (cat.includes('business')) return 'Beginner';
-
-  // Design & History lecture-style → Intermediate
-  // Players (product demos) → Beginner
-  if (cat.includes('player')) return 'Beginner';
-
-  // Default: Intermediate
-  return 'Intermediate';
+function getDesc(item) {
+  const info = classInfo[item.title];
+  return info ? info.desc : '';
 }
 
 function levelBadgeHTML(level) {
+  // Map compound levels to a primary for coloring
+  const primary = level.split('/')[0];
   const cls = {
-    'Beginner': 'level-beginner',
+    'Introductory': 'level-beginner',
+    'Foundational': 'level-foundational',
     'Intermediate': 'level-intermediate',
     'Advanced': 'level-advanced',
-    'All Levels': 'level-all'
-  }[level] || 'level-all';
-  const icon = { 'Beginner': '🟢', 'Intermediate': '🟡', 'Advanced': '🔴', 'All Levels': '⚪' }[level] || '⚪';
+    'Everyone': 'level-all'
+  }[primary] || 'level-all';
+  const icon = {
+    'Introductory': '🟢',
+    'Foundational': '🔵',
+    'Intermediate': '🟡',
+    'Advanced': '🔴',
+    'Everyone': '⚪'
+  }[primary] || '⚪';
   return `<span class="level-badge ${cls}">${icon} ${level}</span>`;
 }
 
@@ -625,9 +728,9 @@ function renderAll() {
     const dayClasses = schedule.filter(s => {
       if (s.day !== day) return false;
       if (catVal && s.category.toLowerCase() !== catVal) return false;
-      if (levelVal && getLevel(s) !== levelVal) return false;
+      if (levelVal && !getLevel(s).split('/').some(l => l === levelVal)) return false;
       if (searchVal) {
-        const hay = (s.title + ' ' + s.presenter + ' ' + s.room + ' ' + s.category).toLowerCase();
+        const hay = (s.title + ' ' + s.presenter + ' ' + s.room + ' ' + s.category + ' ' + (getDesc(s) || '')).toLowerCase();
         if (!hay.includes(searchVal)) return false;
       }
       return true;
@@ -654,12 +757,15 @@ function renderAll() {
 
       timeMap[time].forEach(c => {
         const level = getLevel(c);
+        const desc = getDesc(c);
         const card = document.createElement('div');
         card.className = 'class-card ' + catClass(c.category);
+        const descId = 'desc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}</div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}${desc ? `<span class="class-desc-toggle" onclick="document.getElementById('${descId}').classList.toggle('open')" title="Show description">ℹ️</span>` : ''}</div>
             <div class="class-presenter">${c.presenter}</div>
+            ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
           </div>
           <div class="class-meta">
