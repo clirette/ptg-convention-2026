@@ -111,6 +111,7 @@
       align-items: start;
     }
     .class-card .class-title { font-weight: 600; font-size: 1rem; }
+    .class-card .class-actions { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; }
     .class-card .class-presenter { font-size: 0.9rem; color: var(--muted); }
     .class-card .class-meta {
       text-align: right;
@@ -239,8 +240,8 @@
     /* Bookmark / My Schedule */
     .bookmark-btn {
       background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 0.7rem;
-      padding: 0.2rem 0.5rem; margin-left: 0.5rem; border-radius: 4px; font-weight: 600;
-      white-space: nowrap; vertical-align: middle; transition: background 0.15s, transform 0.15s;
+      padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;
+      white-space: nowrap; transition: background 0.15s, transform 0.15s;
     }
     .bookmark-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
     .bookmark-btn.saved { background: #b45309; }
@@ -879,7 +880,8 @@ function renderMySchedule() {
         const descId = 'msdesc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn saved" title="Remove from My Schedule">Remove</button></div>
+            <div class="class-title">${c.title}</div>
+            <div class="class-actions">${levelBadgeHTML(level)}<button class="bookmark-btn saved" title="Remove from My Schedule">Remove</button></div>
             <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
           </div>
@@ -982,7 +984,8 @@ function renderAll() {
         const descId = 'desc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule"></button></div>
+            <div class="class-title">${c.title}</div>
+            <div class="class-actions">${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule"></button></div>
             <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
