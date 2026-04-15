@@ -134,6 +134,38 @@
       font-weight: 600;
     }
 
+    /* Difficulty badges */
+    .level-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.5rem;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-top: 0.2rem;
+      white-space: nowrap;
+    }
+    .level-beginner     { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef3c7; color: #92400e; }
+    .level-advanced     { background: #fee2e2; color: #991b1b; }
+    .level-all          { background: #e0e7ff; color: #3730a3; }
+
+    /* Level legend */
+    .level-legend {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      margin: 0.5rem 0 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.5rem;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    .level-legend .label { font-weight: 600; color: var(--accent); }
+    .level-legend .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+
     /* Category colors */
     .cat-action       { border-left-color: #dc2626; }
     .cat-action .class-category { background: #fef2f2; color: #dc2626; }
@@ -233,9 +265,28 @@
     Regional meetings: <strong>Thursday, 6:45–7:45 a.m.</strong> (listed separately)
   </div>
 
+  <div class="level-legend">
+    <span class="label">Difficulty Levels:</span>
+    <div class="legend-item"><span class="level-badge level-beginner">🟢 Beginner</span> Introductory &amp; foundational</div>
+    <div class="legend-item"><span class="level-badge level-intermediate">🟡 Intermediate</span> Working knowledge assumed</div>
+    <div class="legend-item"><span class="level-badge level-advanced">🔴 Advanced</span> Deep dives &amp; masterclasses</div>
+    <div class="legend-item"><span class="level-badge level-all">⚪ All Levels</span> Forums, exams &amp; general interest</div>
+  </div>
+  <div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.75rem; font-style:italic;">
+    ℹ️ Difficulty levels are inferred from class titles and categories — the original PDF does not include explicit levels.
+  </div>
+
   <div class="filter-bar">
     <label for="cat-filter">Category:</label>
     <select id="cat-filter"><option value="">All Categories</option></select>
+    <label for="level-filter">Level:</label>
+    <select id="level-filter">
+      <option value="">All Levels</option>
+      <option value="Beginner">🟢 Beginner</option>
+      <option value="Intermediate">🟡 Intermediate</option>
+      <option value="Advanced">🔴 Advanced</option>
+      <option value="All Levels">⚪ All Levels</option>
+    </select>
     <label for="search-input">Search:</label>
     <input type="text" id="search-input" placeholder="Class name, presenter, room…">
     <button class="reset-btn" id="reset-btn">Reset</button>
@@ -456,6 +507,73 @@ function catClass(cat) {
   return '';
 }
 
+// ─── Difficulty level inference ───
+function getLevel(item) {
+  const t = item.title.toLowerCase();
+  const cat = item.category.toLowerCase();
+
+  // All Levels: forums, exams, orientation, playground, health/wellness, business/networking, manufacturer presentations
+  if (cat.includes('forum')) return 'All Levels';
+  if (cat.includes('rpt')) return 'All Levels';
+  if (cat.includes('health')) return 'All Levels';
+  if (t.includes('orientation')) return 'All Levels';
+  if (t.includes('playground')) return 'All Levels';
+  if (t.includes('forum')) return 'All Levels';
+
+  // Beginner: introductory, 101, fundamentals, "what is", "for dummies", beginner, "how pianos are tuned"
+  const beginnerPatterns = [
+    /\bintro\b/, /\bintroduction\b/, /\b101\b/, /\bfundamental/, /\bwhat is\b/,
+    /\bfor dummies\b/, /\bbeginner/, /\bfirst do no harm\b/,
+    /\bhow pianos are tuned by ear\b/, /\bunderstanding the drop action\b/,
+    /\bit was my grandmother/, /\blifting stuff\b/, /\bcareer stability\b/,
+    /\bgrow with gazelle\b/, /\bsustained growth\b/, /\bvoicing your business\b/,
+    /\bgut taxes\b/, /\bbusiness is grand\b/, /\bthe class on teaching\b/,
+    /\bptg member\b/, /\bwhat is a piano key\b/, /\bwhat is a good scale\b/
+  ];
+  for (const p of beginnerPatterns) {
+    if (p.test(t)) return 'Beginner';
+  }
+
+  // Advanced: masterclass, mastering, multi-period deep workshops, "demystified" (implies taming complexity),
+  // "actionpalooza" (full-day), "4 parts", concert prep, reimagining, restore/replace
+  const advancedPatterns = [
+    /\bmasterclass\b/, /\bmastering\b/, /\bactionpalooza\b/,
+    /\bin 4 parts\b/, /\bconcert preparation\b/, /\bconcert tuning\b/,
+    /\breimaginat?ing\b/, /\brestore\/replace\b/, /\bdemystified\b/,
+    /\bbulletproof tuning\b/, /\bultimate puzzle\b/, /\bbaldassin-sanderson\b/,
+    /\bgrand damper systems\b/, /\bvertical regulation in 4\b/,
+    /\bunder the lid in 4\b/, /\bbearing vs crown\b/,
+    /\b3d modeling with ai\b/, /\bhow to design a piano\b/,
+    /\btroubleshooting aural\b/, /\bgrand piano voicing.*picture\b/,
+    /\boptimizing piano tone\b/, /\bkey weights set once\b/,
+    /\bfrontweight foundation\b/, /\baction geometry restore\b/
+  ];
+  for (const p of advancedPatterns) {
+    if (p.test(t)) return 'Advanced';
+  }
+
+  // Business/networking general topics → Beginner-friendly
+  if (cat.includes('business')) return 'Beginner';
+
+  // Design & History lecture-style → Intermediate
+  // Players (product demos) → Beginner
+  if (cat.includes('player')) return 'Beginner';
+
+  // Default: Intermediate
+  return 'Intermediate';
+}
+
+function levelBadgeHTML(level) {
+  const cls = {
+    'Beginner': 'level-beginner',
+    'Intermediate': 'level-intermediate',
+    'Advanced': 'level-advanced',
+    'All Levels': 'level-all'
+  }[level] || 'level-all';
+  const icon = { 'Beginner': '🟢', 'Intermediate': '🟡', 'Advanced': '🔴', 'All Levels': '⚪' }[level] || '⚪';
+  return `<span class="level-badge ${cls}">${icon} ${level}</span>`;
+}
+
 // ─── Build UI ───
 const days = [...new Set(schedule.map(s => s.day))];
 const categories = [...new Set(schedule.map(s => s.category))].sort();
@@ -496,6 +614,7 @@ function switchDay(day) {
 
 function renderAll() {
   const catVal = catFilter.value.toLowerCase();
+  const levelVal = document.getElementById('level-filter').value;
   const searchVal = document.getElementById('search-input').value.toLowerCase();
   let totalShown = 0;
 
@@ -506,6 +625,7 @@ function renderAll() {
     const dayClasses = schedule.filter(s => {
       if (s.day !== day) return false;
       if (catVal && s.category.toLowerCase() !== catVal) return false;
+      if (levelVal && getLevel(s) !== levelVal) return false;
       if (searchVal) {
         const hay = (s.title + ' ' + s.presenter + ' ' + s.room + ' ' + s.category).toLowerCase();
         if (!hay.includes(searchVal)) return false;
@@ -533,11 +653,12 @@ function renderAll() {
       group.appendChild(h);
 
       timeMap[time].forEach(c => {
+        const level = getLevel(c);
         const card = document.createElement('div');
         card.className = 'class-card ' + catClass(c.category);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title}</div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}</div>
             <div class="class-presenter">${c.presenter}</div>
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
           </div>
@@ -559,9 +680,11 @@ function renderAll() {
 }
 
 catFilter.addEventListener('change', renderAll);
+document.getElementById('level-filter').addEventListener('change', renderAll);
 document.getElementById('search-input').addEventListener('input', renderAll);
 document.getElementById('reset-btn').addEventListener('click', () => {
   catFilter.value = '';
+  document.getElementById('level-filter').value = '';
   document.getElementById('search-input').value = '';
   renderAll();
 });
