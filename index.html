@@ -238,12 +238,12 @@
 
     /* Bookmark / My Schedule */
     .bookmark-btn {
-      background: none; border: none; cursor: pointer; font-size: 1.1rem;
-      padding: 0; margin-left: 0.35rem; opacity: 0.35; transition: opacity 0.15s, transform 0.15s;
-      vertical-align: middle; line-height: 1;
+      background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 0.7rem;
+      padding: 0.2rem 0.5rem; margin-left: 0.5rem; border-radius: 4px; font-weight: 600;
+      white-space: nowrap; vertical-align: middle; transition: background 0.15s, transform 0.15s;
     }
-    .bookmark-btn:hover { opacity: 0.7; transform: scale(1.2); }
-    .bookmark-btn.saved { opacity: 1; }
+    .bookmark-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+    .bookmark-btn.saved { background: #b45309; }
     .class-card.selected { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
     .my-schedule-tab {
       padding: 0.6rem 1.5rem; border: 2px solid #b45309; border-radius: 6px;
@@ -879,7 +879,7 @@ function renderMySchedule() {
         const descId = 'msdesc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn saved" title="Remove from My Schedule">⭐</button></div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn saved" title="Remove from My Schedule">Remove</button></div>
             <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
           </div>
@@ -982,7 +982,7 @@ function renderAll() {
         const descId = 'desc-' + Math.random().toString(36).substr(2, 9);
         card.innerHTML = `
           <div>
-            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule">☆</button></div>
+            <div class="class-title">${c.title} ${levelBadgeHTML(level)}<button class="bookmark-btn${sel ? ' saved' : ''}" title="${sel ? 'Remove from' : 'Add to'} My Schedule"></button></div>
             <div class="class-presenter">${c.presenter}</div>
             ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
@@ -995,7 +995,7 @@ function renderAll() {
         `;
         // Attach bookmark click
         const bmBtn = card.querySelector('.bookmark-btn');
-        bmBtn.textContent = sel ? '⭐' : '☆';
+        bmBtn.textContent = sel ? 'Remove' : 'Add to My Schedule';
         bmBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSelection(c); });
         if (desc) { card.addEventListener('click', () => { document.getElementById(descId).classList.toggle('open'); }); }
         group.appendChild(card);
