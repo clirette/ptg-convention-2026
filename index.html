@@ -321,12 +321,12 @@
     .msched-item {
       background: var(--card); border-left: 4px solid var(--border); border-radius: 6px;
       box-shadow: var(--shadow); margin-bottom: 0.35rem; padding: 0.5rem 0.75rem;
-      display: grid; grid-template-columns: 5.5rem 1fr auto auto; gap: 0.15rem 0.85rem;
+      display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto auto; gap: 0.15rem 0.85rem;
       align-items: baseline; cursor: pointer;
     }
     .msched-item .msched-time { font-weight: 700; color: var(--accent); font-size: 0.8rem; white-space: nowrap; }
     .msched-item .msched-time .msched-multi { display: block; font-size: 0.68rem; color: #b45309; font-weight: 600; }
-    .msched-title { font-weight: 600; font-size: 0.92rem; line-height: 1.25; }
+    .msched-title { font-weight: 600; font-size: 0.92rem; line-height: 1.25; overflow-wrap: anywhere; }
     .msched-title .msched-presenter { font-weight: 400; color: var(--muted); font-size: 0.82rem; }
     .msched-meta { text-align: right; font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
     .msched-meta .msched-room { font-weight: 600; color: var(--text); }
@@ -339,15 +339,32 @@
     .msched-desc { grid-column: 1 / -1; display: none; font-size: 0.78rem; color: var(--muted); line-height: 1.35; margin-top: 0.25rem; padding-top: 0.35rem; border-top: 1px dashed var(--border); }
     .msched-desc.open { display: block; }
     @media (max-width: 640px) {
-      .msched-item { grid-template-columns: 4.5rem 1fr; }
-      .msched-meta { grid-column: 2; text-align: left; margin-top: 0.15rem; }
+      .msched-item { grid-template-columns: minmax(0, 1fr) auto; gap: 0.1rem 0.5rem; }
+      .msched-item .msched-time { grid-column: 1; }
+      .msched-title { grid-column: 1; }
+      .msched-meta { grid-column: 1; text-align: left; margin-top: 0.15rem; white-space: normal; }
       .msched-meta .msched-cat { display: inline-block; margin-left: 0.5rem; }
-      .msched-remove { grid-column: 2; grid-row: 1; justify-self: end; }
+      .msched-remove { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
     }
 
     /* Responsive */
     @media (max-width: 640px) {
+      header { padding: 1.15rem 1rem; }
       header h1 { font-size: 1.4rem; }
+      header p { font-size: 0.9rem; }
+      header .subtitle { font-size: 0.8rem; margin-top: 0.35rem; }
+      .container { padding: 0.75rem; }
+      .period-ref { padding: 0.7rem 1rem; gap: 0.4rem 1.1rem; margin: 0.75rem 0; }
+      .period-ref span { font-size: 0.82rem; }
+      .level-legend { padding: 0.7rem 1rem; gap: 0.5rem 1rem; }
+      .day-tabs { gap: 0.4rem; margin: 1rem 0 0.75rem; }
+
+      /* Filter bar: stack each control full-width with its label above it */
+      .filter-bar { gap: 0.35rem 0.5rem; }
+      .filter-bar label { width: 100%; margin: 0 0 -0.15rem; }
+      .filter-bar select, .filter-bar input { width: 100%; flex: 1 1 100%; min-width: 0; }
+      .filter-bar .reset-btn { width: 100%; margin-top: 0.15rem; }
+
       .class-card {
         grid-template-columns: 1fr;
       }
