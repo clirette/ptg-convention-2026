@@ -780,6 +780,31 @@ function getDesc(item) {
   return info ? info.desc : '';
 }
 
+// ─── Room → Floor (from Hyatt Regency Crystal City floor plan) ───
+const roomFloor = {
+  // Ballroom Level
+  "Potomac III": "Ballroom Level",
+  "Potomac IV": "Ballroom Level",
+  "Potomac V": "Ballroom Level",
+  "Potomac VI": "Ballroom Level",
+  "Washington A": "Ballroom Level",
+  "Washington B": "Ballroom Level",
+  "Conference Th.": "Ballroom Level",
+  // Second Floor
+  "Tidewater II": "2nd Floor",
+  // Third Floor
+  "Jefferson": "3rd Floor",
+  "Roosevelt": "3rd Floor",
+  "Kennedy": "3rd Floor",
+  "Lincoln": "3rd Floor",
+  "Arlington": "3rd Floor",
+  "Fairfax": "3rd Floor",
+  // Renaissance Hotel (across the street)
+  "Renaissance, Salon 3": "Renaissance Hotel"
+};
+function getFloor(room) { return roomFloor[room] || ''; }
+function roomLabel(room) { const f = getFloor(room); return f ? room + ' · ' + f : room; }
+
 function levelBadgeHTML(level) {
   // Map compound levels to a primary for coloring
   const primary = level.split('/')[0];
@@ -996,7 +1021,7 @@ function renderMySchedule() {
       item.innerHTML = `
         <div class="msched-time">${timeHTML}</div>
         <div class="msched-title">${c.title} <span class="msched-presenter">${c.presenter}</span></div>
-        <div class="msched-meta"><span class="msched-room">📍 ${c.room}</span><span class="msched-cat">${c.category}</span></div>
+        <div class="msched-meta"><span class="msched-room">📍 ${roomLabel(c.room)}</span><span class="msched-cat">${c.category}</span></div>
         ${readOnly ? '' : '<button class="msched-remove" title="Remove from My Schedule">✕</button>'}
         ${desc ? `<div class="msched-desc" id="${descId}">${desc}</div>` : ''}
       `;
@@ -1079,7 +1104,7 @@ function exportSchedule() {
     dayClasses.forEach(c => { if (!timeMap[c.time]) { timeOrder.push(c.time); timeMap[c.time] = []; } timeMap[c.time].push(c); });
     timeOrder.forEach(time => {
       timeMap[time].forEach(c => {
-        text += `  ${time}  ${c.title} — ${c.presenter} (${c.room})\n`;
+        text += `  ${time}  ${c.title} — ${c.presenter} (${roomLabel(c.room)})\n`;
       });
     });
     text += '\n';
@@ -1146,7 +1171,7 @@ function renderAll() {
             ${c.note ? '<div style="font-size:0.8rem;color:#b45309;margin-top:0.2rem;">⚠️ ' + c.note + '</div>' : ''}
           </div>
           <div class="class-meta">
-            <div class="class-room">📍 ${c.room}</div>
+            <div class="class-room">📍 ${roomLabel(c.room)}</div>
             <span class="class-category">${c.category}</span>
             ${c.multi ? '<div class="multi-period">⏱ Multi-period</div>' : ''}
           </div>
