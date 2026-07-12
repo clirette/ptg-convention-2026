@@ -272,10 +272,78 @@
     .my-sched-actions .export-btn:hover { background: var(--accent-light); }
     .my-sched-actions .clear-btn { color: #dc2626; border-color: #dc2626; }
     .my-sched-actions .clear-btn:hover { background: #fef2f2; }
+    .my-sched-actions .share-btn { color: #0891b2; border-color: #0891b2; }
+    .my-sched-actions .share-btn:hover { background: #ecfeff; }
     .my-sched-empty {
       text-align: center; padding: 3rem 1rem; color: var(--muted);
     }
     .my-sched-empty p { margin-bottom: 0.5rem; }
+
+    /* Share panel */
+    .share-panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.85rem 1rem; margin-bottom: 1rem; box-shadow: var(--shadow);
+      display: none;
+    }
+    .share-panel.open { display: block; }
+    .share-panel .share-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .share-panel .share-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .share-panel input {
+      flex: 1; min-width: 200px; padding: 0.45rem 0.6rem; font-size: 0.85rem;
+      border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text);
+    }
+    .share-panel .copy-btn {
+      padding: 0.45rem 1rem; border: 1px solid #0891b2; background: #0891b2; color: #fff;
+      border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .share-panel .copy-btn:hover { filter: brightness(1.08); }
+
+    /* Shared-view banner */
+    .shared-banner {
+      background: #ecfeff; border: 1px solid #0891b2; border-radius: 8px;
+      padding: 0.85rem 1rem; margin-bottom: 1rem;
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+    }
+    .shared-banner .shared-msg { font-size: 0.9rem; color: #155e75; flex: 1; min-width: 200px; }
+    .shared-banner button {
+      padding: 0.4rem 1rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      border: 1px solid #0891b2; background: #0891b2; color: #fff;
+    }
+    .shared-banner button.secondary { background: transparent; color: #0891b2; }
+    .shared-banner button:hover { filter: brightness(1.05); }
+
+    /* Compact My Schedule list */
+    .msched-day {
+      font-size: 1.15rem; color: var(--accent); font-weight: 700;
+      margin: 1.25rem 0 0.5rem; padding-bottom: 0.35rem; border-bottom: 2px solid var(--accent);
+    }
+    .msched-day:first-of-type { margin-top: 0.25rem; }
+    .msched-item {
+      background: var(--card); border-left: 4px solid var(--border); border-radius: 6px;
+      box-shadow: var(--shadow); margin-bottom: 0.35rem; padding: 0.5rem 0.75rem;
+      display: grid; grid-template-columns: 5.5rem 1fr auto auto; gap: 0.15rem 0.85rem;
+      align-items: baseline; cursor: pointer;
+    }
+    .msched-item .msched-time { font-weight: 700; color: var(--accent); font-size: 0.8rem; white-space: nowrap; }
+    .msched-item .msched-time .msched-multi { display: block; font-size: 0.68rem; color: #b45309; font-weight: 600; }
+    .msched-title { font-weight: 600; font-size: 0.92rem; line-height: 1.25; }
+    .msched-title .msched-presenter { font-weight: 400; color: var(--muted); font-size: 0.82rem; }
+    .msched-meta { text-align: right; font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+    .msched-meta .msched-room { font-weight: 600; color: var(--text); }
+    .msched-meta .msched-cat { display: block; font-size: 0.68rem; margin-top: 0.1rem; }
+    .msched-remove {
+      align-self: center; background: none; border: none; cursor: pointer;
+      color: #dc2626; font-size: 0.95rem; line-height: 1; padding: 0.15rem 0.25rem; font-weight: 700;
+    }
+    .msched-remove:hover { color: #991b1b; }
+    .msched-desc { grid-column: 1 / -1; display: none; font-size: 0.78rem; color: var(--muted); line-height: 1.35; margin-top: 0.25rem; padding-top: 0.35rem; border-top: 1px dashed var(--border); }
+    .msched-desc.open { display: block; }
+    @media (max-width: 640px) {
+      .msched-item { grid-template-columns: 4.5rem 1fr; }
+      .msched-meta { grid-column: 2; text-align: left; margin-top: 0.15rem; }
+      .msched-meta .msched-cat { display: inline-block; margin-left: 0.5rem; }
+      .msched-remove { grid-column: 2; grid-row: 1; justify-self: end; }
+    }
 
     /* Responsive */
     @media (max-width: 640px) {
@@ -781,7 +849,10 @@ days.forEach((day, i) => {
 const mySchedBtn = document.createElement('button');
 mySchedBtn.className = 'my-schedule-tab';
 mySchedBtn.innerHTML = '📋 My Schedule <span class="my-sched-badge" id="my-sched-badge">0</span>';
-mySchedBtn.addEventListener('click', () => switchToMySchedule());
+mySchedBtn.addEventListener('click', () => {
+  if (sharedMode) { sharedMode = false; sharedKeys = []; if (location.hash) history.replaceState(null, '', location.pathname + location.search); }
+  switchToMySchedule();
+});
 tabsEl.appendChild(mySchedBtn);
 
 let mySchedActive = false;
@@ -792,6 +863,7 @@ function updateBadge() {
 updateBadge();
 
 function switchDay(day) {
+  if (sharedMode) { sharedMode = false; sharedKeys = []; if (location.hash) history.replaceState(null, '', location.pathname + location.search); }
   mySchedActive = false;
   mySchedBtn.classList.remove('active');
   document.getElementById('my-schedule-section').classList.remove('active');
@@ -813,87 +885,159 @@ function switchToMySchedule() {
 
 function renderMySchedule() {
   const container = document.getElementById('my-schedule-section');
-  const sel = getSelections();
+  const readOnly = sharedMode;
+  const sel = readOnly ? sharedKeys : getSelections();
   container.innerHTML = '';
 
+  // Shared-view banner (when opened from a share link)
+  if (readOnly) {
+    const banner = document.createElement('div');
+    banner.className = 'shared-banner';
+    banner.innerHTML = `<span class="shared-msg">👀 You're viewing a <strong>shared schedule</strong>${sel.length ? '' : ' — but it has no classes'}.</span>`;
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = '⬇️ Save to My Schedule';
+    copyBtn.addEventListener('click', () => {
+      if (confirm('This replaces your current selections with the shared schedule. Continue?')) {
+        saveSelections(sharedKeys.slice());
+        exitSharedMode();
+      }
+    });
+    const exitBtn = document.createElement('button');
+    exitBtn.className = 'secondary';
+    exitBtn.textContent = 'Exit shared view';
+    exitBtn.addEventListener('click', exitSharedMode);
+    if (sel.length) banner.appendChild(copyBtn);
+    banner.appendChild(exitBtn);
+    container.appendChild(banner);
+  }
+
   if (sel.length === 0) {
-    container.innerHTML = `<div class="my-sched-empty">
-      <p style="font-size:1.5rem;">📋</p>
-      <p><strong>No classes selected yet</strong></p>
-      <p>Click the ⭐ star on any class to add it to your personal schedule.</p>
-    </div>`;
+    if (!readOnly) {
+      container.innerHTML += `<div class="my-sched-empty">
+        <p style="font-size:1.5rem;">📋</p>
+        <p><strong>No classes selected yet</strong></p>
+        <p>Click the ⭐ star on any class to add it to your personal schedule.</p>
+      </div>`;
+    }
     return;
   }
 
-  // Action bar
-  const actions = document.createElement('div');
-  actions.className = 'my-sched-actions';
-  const exportBtn = document.createElement('button');
-  exportBtn.className = 'export-btn';
-  exportBtn.textContent = '📄 Export as Text';
-  exportBtn.addEventListener('click', exportSchedule);
-  const clearBtn = document.createElement('button');
-  clearBtn.className = 'clear-btn';
-  clearBtn.textContent = '🗑️ Clear All';
-  clearBtn.addEventListener('click', () => { if (confirm('Remove all selected classes?')) { saveSelections([]); updateBadge(); renderMySchedule(); renderAll(); } });
-  actions.appendChild(exportBtn);
-  actions.appendChild(clearBtn);
-  actions.appendChild(Object.assign(document.createElement('span'), { style: 'color:var(--muted);font-size:0.85rem;', textContent: sel.length + ' class' + (sel.length !== 1 ? 'es' : '') + ' selected' }));
-  container.appendChild(actions);
+  // Action bar (own schedule only)
+  if (!readOnly) {
+    const actions = document.createElement('div');
+    actions.className = 'my-sched-actions';
+    const shareBtn = document.createElement('button');
+    shareBtn.className = 'share-btn';
+    shareBtn.textContent = '🔗 Share Schedule';
+    shareBtn.addEventListener('click', toggleSharePanel);
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'export-btn';
+    exportBtn.textContent = '📄 Export as Text';
+    exportBtn.addEventListener('click', exportSchedule);
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'clear-btn';
+    clearBtn.textContent = '🗑️ Clear All';
+    clearBtn.addEventListener('click', () => { if (confirm('Remove all selected classes?')) { saveSelections([]); updateBadge(); renderMySchedule(); renderAll(); } });
+    actions.appendChild(shareBtn);
+    actions.appendChild(exportBtn);
+    actions.appendChild(clearBtn);
+    actions.appendChild(Object.assign(document.createElement('span'), { style: 'color:var(--muted);font-size:0.85rem;', textContent: sel.length + ' class' + (sel.length !== 1 ? 'es' : '') + ' selected' }));
+    container.appendChild(actions);
 
-  // Get selected classes, grouped by day then time
+    // Share link panel (hidden until toggled)
+    const panel = document.createElement('div');
+    panel.className = 'share-panel';
+    panel.id = 'share-panel';
+    panel.innerHTML = `
+      <div class="share-label">Anyone with this link can view your selected schedule:</div>
+      <div class="share-row">
+        <input type="text" id="share-url" readonly>
+        <button class="copy-btn" id="share-copy">Copy</button>
+      </div>`;
+    container.appendChild(panel);
+  }
+
+  // Get selected classes, grouped by day then time (in schedule order)
   const selected = schedule.filter(c => sel.includes(classKey(c)));
   const dayOrder = [...new Set(selected.map(c => c.day))];
-  // Sort days in original order
   dayOrder.sort((a, b) => days.indexOf(a) - days.indexOf(b));
 
   dayOrder.forEach(day => {
-    const dayLabel = document.createElement('h2');
+    const dayLabel = document.createElement('div');
+    dayLabel.className = 'msched-day';
     dayLabel.textContent = day;
-    dayLabel.style.cssText = 'font-size:1.3rem; color:var(--accent); margin:1rem 0 0.5rem; padding-bottom:0.4rem; border-bottom:2px solid var(--accent);';
     container.appendChild(dayLabel);
 
-    const dayClasses = selected.filter(c => c.day === day);
-    const timeOrder = [];
-    const timeMap = {};
-    dayClasses.forEach(c => {
-      if (!timeMap[c.time]) { timeOrder.push(c.time); timeMap[c.time] = []; }
-      timeMap[c.time].push(c);
-    });
-
-    timeOrder.forEach(time => {
-      const group = document.createElement('div');
-      group.className = 'time-group';
-      const h = document.createElement('h3');
-      h.textContent = time.includes('to') ? '🕐 ' + time + ' (multi-period)' : '🕐 ' + time;
-      group.appendChild(h);
-
-      timeMap[time].forEach(c => {
-        const level = getLevel(c);
-        const desc = getDesc(c);
-        const card = document.createElement('div');
-        card.className = 'class-card selected ' + catClass(c.category);
-        const descId = 'msdesc-' + Math.random().toString(36).substr(2, 9);
-        card.innerHTML = `
-          <div>
-            <div class="class-title">${c.title} <span class="class-presenter">${c.presenter}</span></div>
-            <div class="class-actions">${levelBadgeHTML(level)}<button class="bookmark-btn saved" title="Remove from My Schedule">Remove</button></div>
-            ${desc ? `<div class="class-desc" id="${descId}">${desc}</div>` : ''}
-          </div>
-          <div class="class-meta">
-            <div class="class-room">📍 ${c.room}</div>
-            <span class="class-category">${c.category}</span>
-            ${c.multi ? '<div class="multi-period">⏱ Multi-period</div>' : ''}
-          </div>
-        `;
-        const bmBtn = card.querySelector('.bookmark-btn');
-        bmBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSelectionByKey(classKey(c)); });
-        if (desc) { card.addEventListener('click', () => { document.getElementById(descId).classList.toggle('open'); }); }
-        group.appendChild(card);
-      });
-      container.appendChild(group);
+    selected.filter(c => c.day === day).forEach(c => {
+      const desc = getDesc(c);
+      const item = document.createElement('div');
+      item.className = 'msched-item ' + catClass(c.category);
+      const descId = 'msdesc-' + Math.random().toString(36).substr(2, 9);
+      const timeHTML = c.multi
+        ? c.time.split(' to ')[0] + '<span class="msched-multi">⏱ multi</span>'
+        : c.time;
+      item.innerHTML = `
+        <div class="msched-time">${timeHTML}</div>
+        <div class="msched-title">${c.title} <span class="msched-presenter">${c.presenter}</span></div>
+        <div class="msched-meta"><span class="msched-room">📍 ${c.room}</span><span class="msched-cat">${c.category}</span></div>
+        ${readOnly ? '' : '<button class="msched-remove" title="Remove from My Schedule">✕</button>'}
+        ${desc ? `<div class="msched-desc" id="${descId}">${desc}</div>` : ''}
+      `;
+      if (!readOnly) {
+        item.querySelector('.msched-remove').addEventListener('click', (e) => { e.stopPropagation(); toggleSelectionByKey(classKey(c)); });
+      }
+      if (desc) { item.addEventListener('click', () => { document.getElementById(descId).classList.toggle('open'); }); }
+      container.appendChild(item);
     });
   });
+}
+
+// ─── Share / shared-view ───
+let sharedMode = false;
+let sharedKeys = [];
+
+function encodeShare(keys) {
+  return keys.map(k => schedule.findIndex(c => classKey(c) === k)).filter(i => i >= 0).join('.');
+}
+function decodeShare(str) {
+  return str.split('.').map(n => parseInt(n, 10))
+    .filter(i => !isNaN(i) && schedule[i])
+    .map(i => classKey(schedule[i]));
+}
+function buildShareURL() {
+  return location.origin + location.pathname + '#share=' + encodeShare(getSelections());
+}
+function toggleSharePanel() {
+  const panel = document.getElementById('share-panel');
+  if (!panel) return;
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open', opening);
+  if (!opening) return;
+  const input = document.getElementById('share-url');
+  input.value = buildShareURL();
+  const copyBtn = document.getElementById('share-copy');
+  copyBtn.onclick = () => {
+    input.select();
+    const done = () => { copyBtn.textContent = '✓ Copied'; setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(input.value).then(done, () => { document.execCommand('copy'); done(); });
+    } else { document.execCommand('copy'); done(); }
+  };
+  input.focus(); input.select();
+}
+function exitSharedMode() {
+  sharedMode = false;
+  sharedKeys = [];
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  switchDay(days[0]);
+}
+function checkSharedHash() {
+  const m = location.hash.match(/^#share=(.+)$/);
+  if (!m) return false;
+  sharedKeys = decodeShare(decodeURIComponent(m[1]));
+  sharedMode = true;
+  switchToMySchedule();
+  return true;
 }
 
 // Helper for My Schedule remove buttons
@@ -1017,6 +1161,9 @@ document.getElementById('reset-btn').addEventListener('click', () => {
 });
 
 renderAll();
+
+// If opened via a share link, show the shared schedule
+checkSharedHash();
 </script>
 
 </body>
